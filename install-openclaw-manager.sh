@@ -17,9 +17,17 @@ NC='\033[0m'
 
 echo -e "${GREEN}开始安装/更新 $PROJECT_NAME (Ubuntu 24.04 支持)${NC}\n"
 
-SUDO=""
 if [ "$(id -u)" -ne 0 ]; then
-    SUDO="sudo"
+    echo -e "${RED}请使用 root 用户执行此脚本（容器默认 root 即可）。${NC}"
+    exit 1
+fi
+
+RUN_USER="${SUDO_USER:-}"
+if [ -z "$RUN_USER" ]; then
+    RUN_USER="${USER:-}"
+fi
+if [ -z "$RUN_USER" ]; then
+    RUN_USER="$(id -un)"
 fi
 
 HAS_GUI=0
@@ -38,7 +46,7 @@ fi
 # ==================== 步骤 1: 依赖检查与安装 ====================
 echo -e "${YELLOW}检查并安装系统依赖...${NC}"
 
-$SUDO apt update -y
+apt update -y
 
 pick_apt_pkg() {
     for pkg in "$@"; do
@@ -64,34 +72,26 @@ if [ -z "$ATK_BRIDGE_PKG" ]; then
     exit 1
 fi
 
-$SUDO apt install -y curl git python3 python3-venv python3-pip build-essential libnss3 "$ATK_BRIDGE_PKG" libdrm2 libxkbcommon0 libgbm1 "$ASOUND_PKG" fonts-liberation xdg-utils ${APPINDICATOR_PKG:+$APPINDICATOR_PKG}
+apt install -y curl git python3 python3-venv python3-pip build-essential libnss3 "$ATK_BRIDGE_PKG" libdrm2 libxkbcommon0 libgbm1 "$ASOUND_PKG" fonts-liberation xdg-utils ${APPINDICATOR_PKG:+$APPINDICATOR_PKG}
 
 # 安装最新 Node.js (OpenClaw 需要 >=22)
 if ! command -v node &> /dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]; then
     echo "安装 Node.js 22 LTS..."
-    if [ -n "$SUDO" ]; then
-        curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO -E bash -
-    else
-        curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-    fi
-    $SUDO apt install -y nodejs
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    apt install -y nodejs
 fi
 
 if ! command -v npm &> /dev/null; then
     echo "检测到 npm 缺失，重新安装 Node.js 22..."
-    if [ -n "$SUDO" ]; then
-        curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO -E bash -
-    else
-        curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-    fi
-    $SUDO apt install -y nodejs
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    apt install -y nodejs
 fi
 
 # 安装 OpenClaw（如果还没装）
 if ! command -v openclaw &> /dev/null; then
     echo "安装 OpenClaw..."
-    $SUDO npm install -g openclaw@latest
-    $SUDO openclaw onboard --install-daemon || true
+    npm install -g openclaw@latest
+    openclaw onboard --install-daemon || true
 fi
 
 # ==================== 步骤 2: 创建项目目录 & 虚拟环境 ====================
@@ -193,7 +193,7 @@ Description=OpenClaw Agent Manager Web UI
 After=network.target
 
 [Service]
-User=$USER
+User=$RUN_USER
 WorkingDirectory=$INSTALL_DIR
 Environment=OPENCLAW_HEADLESS=$([ "$HAS_GUI" -eq 1 ] && echo 0 || echo 1)
 Environment=OPENCLAW_HOST=0.0.0.0
@@ -205,13 +205,24 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
 
-$SUDO cp openclaw-manager.service /etc/systemd/system/
+SYSTEMD_READY=0
+if [ -d /run/systemd/system ] && command -v systemctl &> /dev/null; then
+    SYSTEMD_READY=1
+fi
+
+if [ "$SYSTEMD_READY" -eq 1 ]; then
+    cp openclaw-manager.service /etc/systemd/system/
+else
+    echo -e "${YELLOW}检测到当前环境非 systemd（常见于容器），已跳过 systemd 服务安装。${NC}"
+fi
 
 echo -e "\n${GREEN}安装完成！${NC}"
 echo "使用方式："
 echo "  启动（前台）：    cd $INSTALL_DIR && ./start.sh"
-echo "  启动（后台服务）： systemctl enable --now openclaw-manager.service"
-echo "  关闭后台服务：    systemctl stop openclaw-manager.service"
+if [ "$SYSTEMD_READY" -eq 1 ]; then
+    echo "  启动（后台服务）： systemctl enable --now openclaw-manager.service"
+    echo "  关闭后台服务：    systemctl stop openclaw-manager.service"
+fi
 echo "  查看状态：         ./status.sh"
 echo "  访问界面：         http://localhost:$PORT （或你的IP:8080）"
 echo "  停止前台运行：     ./stop.sh 或 Ctrl+C"
