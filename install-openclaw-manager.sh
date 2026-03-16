@@ -64,11 +64,21 @@ if [ -z "$ATK_BRIDGE_PKG" ]; then
     exit 1
 fi
 
-$SUDO apt install -y curl git python3 python3-venv python3-pip nodejs npm build-essential libnss3 "$ATK_BRIDGE_PKG" libdrm2 libxkbcommon0 libgbm1 "$ASOUND_PKG" fonts-liberation xdg-utils ${APPINDICATOR_PKG:+$APPINDICATOR_PKG}
+$SUDO apt install -y curl git python3 python3-venv python3-pip build-essential libnss3 "$ATK_BRIDGE_PKG" libdrm2 libxkbcommon0 libgbm1 "$ASOUND_PKG" fonts-liberation xdg-utils ${APPINDICATOR_PKG:+$APPINDICATOR_PKG}
 
 # 安装最新 Node.js (OpenClaw 需要 >=22)
 if ! command -v node &> /dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]; then
     echo "安装 Node.js 22 LTS..."
+    if [ -n "$SUDO" ]; then
+        curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO -E bash -
+    else
+        curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    fi
+    $SUDO apt install -y nodejs
+fi
+
+if ! command -v npm &> /dev/null; then
+    echo "检测到 npm 缺失，重新安装 Node.js 22..."
     if [ -n "$SUDO" ]; then
         curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO -E bash -
     else
