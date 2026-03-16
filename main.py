@@ -1364,6 +1364,202 @@ def ensure_agent_dir_for_update(agent_id: str) -> Path:
     return agent_dir
 
 
+def top_level_changes(old: Dict[str, Any], new: Dict[str, Any]) -> list[str]:
+    keys = sorted(set(old.keys()) | set(new.keys()))
+    rows: list[str] = []
+    for key in keys:
+        if old.get(key) != new.get(key):
+            rows.append(key)
+    return rows
+
+
+def _default_model_from_catalog() -> Dict[str, str]:
+    catalog = load_model_catalog()
+    if not catalog:
+        return {"provider": "OpenAI", "model": "gpt-4o-mini", "label": "gpt-4o-mini"}
+    return {
+        "provider": normalize_text(catalog[0].get("provider"), "OpenAI"),
+        "model": normalize_text(catalog[0].get("model"), "gpt-4o-mini"),
+        "label": normalize_text(catalog[0].get("label"), normalize_text(catalog[0].get("model"), "gpt-4o-mini")),
+    }
+
+
+def build_workbench_agent_candidate(payload: Dict[str, Any], current: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    agent_id = normalize_text(payload.get("id"), normalize_text((current or {}).get("id")))
+    if not AGENT_ID_RE.fullmatch(agent_id):
+        raise HTTPException(status_code=400, detail="invalid agent id")
+
+    profiles_map = {item["id"]: item for item in load_model_profiles()}
+    channels_map = {item["id"]: item for item in load_channels()}
+
+    fallback = _default_model_from_catalog()
+    model_profile_id = normalize_text(payload.get("model_profile_id"), normalize_text((current or {}).get("model_profile_id")))
+
+    explicit_model = normalize_text(payload.get("model"))
+    explicit_provider = normalize_text(payload.get("model_provider"))
+    explicit_name = normalize_text(payload.get("model_name"))
+    if not explicit_model and current:
+        default_model = next(
+            (m for m in current.get("models", []) if normalize_text(m.get("id")) == normalize_text(current.get("default_model_id"))),
+            None,
+        )
+        explicit_model = normalize_text((default_model or {}).get("model"), normalize_text(current.get("model")))
+        explicit_provider = normalize_text((default_model or {}).get("provider"), explicit_provider)
+        explicit_name = normalize_text((default_model or {}).get("name"), explicit_name)
+
+    if model_profile_id and model_profile_id in profiles_map:
+        profile = profiles_map[model_profile_id]
+        model = normalize_text(profile.get("model"), explicit_model or fallback["model"])
+        model_provider = normalize_text(profile.get("provider"), explicit_provider or fallback["provider"])
+        model_name = normalize_text(profile.get("name"), explicit_name or model)
+    else:
+        model = normalize_text(explicit_model, fallback["model"])
+        model_provider = normalize_text(explicit_provider, fallback["provider"])
+        model_name = normalize_text(explicit_name, model)
+
+    channels_raw = normalize_id_list(payload.get("channel_ids"))
+    if not channels_raw and current:
+        channels_raw = normalize_id_list(current.get("channel_ids"))
+    channel_ids = [cid for cid in channels_raw if cid in channels_map]
+    default_channel_id = normalize_text(payload.get("default_channel_id"), normalize_text((current or {}).get("default_channel_id")))
+    if channel_ids and default_channel_id not in channel_ids:
+        default_channel_id = channel_ids[0]
+    if not channel_ids:
+        default_channel_id = ""
+
+    chat_entry = normalize_text(payload.get("chat_entry"), normalize_text((current or {}).get("chat_entry")))
+    if not chat_entry and default_channel_id and default_channel_id in channels_map:
+        chat_entry = normalize_text(channels_map[default_channel_id].get("entry"), "default")
+    if not chat_entry:
+        chat_entry = "default"
+
+    auth_type = normalize_text(payload.get("auth_type"), normalize_text((current or {}).get("auth_type"), "token")).lower()
+    if auth_type not in {"token", "password"}:
+        raise HTTPException(status_code=400, detail="auth_type must be token/password")
+    token_or_pass = normalize_text(payload.get("token_or_pass"), normalize_text((current or {}).get("token_or_pass")))
+
+    skill_ids = normalize_id_list(payload.get("skill_ids"))
+    if not skill_ids and current:
+        skill_ids = normalize_id_list(current.get("skill_ids"))
+    mcp_ids = normalize_id_list(payload.get("mcp_ids"))
+    if not mcp_ids and current:
+        mcp_ids = normalize_id_list(current.get("mcp_ids"))
+
+    now = now_iso()
+    model_id = normalize_text((current or {}).get("default_model_id"), make_object_id("model"))
+    chat_id = normalize_text((current or {}).get("default_chat_id"), make_object_id("chat"))
+
+    seed = {
+        "id": agent_id,
+        "auth_type": auth_type,
+        "token_or_pass": token_or_pass,
+        "models": [
+            {
+                "id": model_id,
+                "name": model_name,
+                "provider": model_provider,
+                "model": model,
+            }
+        ],
+        "chats": [
+            {
+                "id": chat_id,
+                "name": normalize_text(payload.get("chat_name"), chat_entry),
+                "entry": chat_entry,
+                "model_id": model_id,
+            }
+        ],
+        "default_model_id": model_id,
+        "default_chat_id": chat_id,
+        "model_profile_id": model_profile_id,
+        "channel_ids": channel_ids,
+        "default_channel_id": default_channel_id,
+        "skill_ids": skill_ids,
+        "mcp_ids": mcp_ids,
+        "created_at": normalize_text((current or {}).get("created_at"), now),
+        "updated_at": now,
+        "created_by": normalize_text((current or {}).get("created_by"), "workbench"),
+    }
+    return sync_agent_bindings(normalize_agent_config(agent_id, seed))
+
+
+def build_openclaw_binding_preview(agent: Dict[str, Any]) -> Dict[str, Any]:
+    channel_ids = normalize_id_list(agent.get("channel_ids"))
+    chats = [item for item in agent.get("chats", []) if isinstance(item, dict)]
+    rows: Dict[str, Any] = {}
+    for chat in chats:
+        entry = normalize_text(chat.get("entry"))
+        if not entry:
+            continue
+        rows[entry] = {
+            "agent": normalize_text(agent.get("id")),
+            "entry": entry,
+            "model_profile_id": normalize_text(agent.get("model_profile_id")),
+            "channel_ids": channel_ids,
+        }
+    return {"agents": {"list": [normalize_text(agent.get("id"))], "bindings": rows}}
+
+
+def merge_agent_into_openclaw_config(agent: Dict[str, Any]) -> Dict[str, Any]:
+    cfg = load_openclaw_config()
+    if not isinstance(cfg, dict):
+        cfg = {}
+    agents_cfg = cfg.get("agents")
+    if not isinstance(agents_cfg, dict):
+        agents_cfg = {}
+
+    raw_list = agents_cfg.get("list")
+    agent_list: list[str] = []
+    if isinstance(raw_list, list):
+        agent_list = normalize_id_list(raw_list)
+    elif isinstance(raw_list, dict):
+        agent_list = normalize_id_list(list(raw_list.keys()))
+    elif isinstance(raw_list, str):
+        agent_list = [raw_list]
+
+    agent_id = normalize_text(agent.get("id"))
+    if agent_id and agent_id not in agent_list:
+        agent_list.append(agent_id)
+
+    raw_bindings = agents_cfg.get("bindings")
+    bindings: Dict[str, Any] = raw_bindings if isinstance(raw_bindings, dict) else {}
+    binding_preview = build_openclaw_binding_preview(agent)
+    binding_rows = (
+        binding_preview.get("agents", {}).get("bindings", {})
+        if isinstance(binding_preview.get("agents"), dict)
+        else {}
+    )
+    if isinstance(binding_rows, dict):
+        for entry, value in binding_rows.items():
+            bindings[normalize_text(entry)] = value
+
+    agents_cfg["list"] = agent_list
+    agents_cfg["bindings"] = bindings
+    cfg["agents"] = agents_cfg
+    return cfg
+
+
+def route_test(entry: str) -> list[Dict[str, Any]]:
+    wanted = normalize_text(entry).lower()
+    if not wanted:
+        return []
+    rows: list[Dict[str, Any]] = []
+    for agent in list_agent_details():
+        for chat in agent.get("chats", []):
+            chat_entry = normalize_text(chat.get("entry")).lower()
+            if chat_entry != wanted:
+                continue
+            rows.append(
+                {
+                    "agent_id": normalize_text(agent.get("id")),
+                    "chat_id": normalize_text(chat.get("id")),
+                    "entry": normalize_text(chat.get("entry")),
+                    "source": normalize_text(agent.get("source"), "manager"),
+                }
+            )
+    return rows
+
+
 def restart_gateway() -> Dict[str, Any]:
     try:
         result = subprocess.run(
@@ -1488,7 +1684,7 @@ async def index(request: Request) -> HTMLResponse:
 
     gui_ready = is_gui_available()
     return render_template(
-        "index.html",
+        "index_workbench.html",
         username=user["username"],
         must_change_password=bool(user.get("must_change_password", False)),
         agents=list_agents(),
@@ -1545,6 +1741,151 @@ async def api_state(request: Request) -> Dict[str, Any]:
         "gui_available": is_gui_available(),
         "auth_flow_ttl": AUTH_FLOW_TTL_SECONDS,
     }
+
+
+@app.get("/api/workbench/state")
+async def api_workbench_state(request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    agents = list_agent_details()
+    channel_usage = usage_counter(agents, "channel_ids")
+    channels = load_channels()
+    for item in channels:
+        item["usage"] = channel_usage.get(item["id"], 0)
+
+    profile_usage = usage_counter(agents, "model_profile_id")
+    profiles = load_model_profiles()
+    for item in profiles:
+        item["usage"] = profile_usage.get(item["id"], 0)
+
+    skill_usage = usage_counter(agents, "skill_ids")
+    skills = load_skills()
+    for item in skills:
+        item["usage"] = skill_usage.get(item["id"], 0)
+
+    mcp_usage = usage_counter(agents, "mcp_ids")
+    mcps = load_mcp_servers()
+    for item in mcps:
+        item["usage"] = mcp_usage.get(item["id"], 0)
+
+    openclaw_cfg = load_openclaw_config()
+    bindings = []
+    agents_cfg = openclaw_cfg.get("agents") if isinstance(openclaw_cfg, dict) else {}
+    if isinstance(agents_cfg, dict):
+        raw_bindings = agents_cfg.get("bindings")
+        if isinstance(raw_bindings, dict):
+            for entry, row in raw_bindings.items():
+                if isinstance(row, dict):
+                    bindings.append(
+                        {
+                            "entry": normalize_text(entry),
+                            "agent": normalize_text(row.get("agent")),
+                        }
+                    )
+
+    return {
+        "status": "success",
+        "username": user["username"],
+        "must_change_password": bool(user.get("must_change_password", False)),
+        "agents": agents,
+        "models": load_model_catalog(),
+        "model_profiles": profiles,
+        "channels": channels,
+        "skills": skills,
+        "mcp_servers": mcps,
+        "bindings": bindings,
+        "suggested_version": suggest_next_version(),
+        "openclaw_dir": str(OPENCLAW_DIR),
+        "gui_available": is_gui_available(),
+        "guide": summarize_openclaw_basics(),
+    }
+
+
+@app.post("/api/workbench/preview")
+async def api_workbench_preview(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    payload = await parse_payload(request)
+    agent_payload = payload.get("agent", payload)
+    if not isinstance(agent_payload, dict):
+        raise HTTPException(status_code=400, detail="invalid payload")
+    agent_id = normalize_text(agent_payload.get("id"))
+    if not agent_id:
+        raise HTTPException(status_code=400, detail="agent id cannot be empty")
+
+    existing: Optional[Dict[str, Any]] = None
+    try:
+        existing = get_agent_or_404(agent_id)
+    except HTTPException:
+        existing = None
+
+    candidate = build_workbench_agent_candidate(agent_payload, existing)
+    binding_preview = build_openclaw_binding_preview(candidate)
+    changed = top_level_changes(existing or {}, candidate)
+    return {
+        "status": "success",
+        "existing": existing,
+        "candidate": candidate,
+        "binding_preview": binding_preview,
+        "changed_fields": changed,
+    }
+
+
+@app.post("/api/workbench/apply")
+async def api_workbench_apply(request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    agent_payload = payload.get("agent", payload)
+    if not isinstance(agent_payload, dict):
+        raise HTTPException(status_code=400, detail="invalid payload")
+    agent_id = normalize_text(agent_payload.get("id"))
+    if not agent_id:
+        raise HTTPException(status_code=400, detail="agent id cannot be empty")
+
+    existing: Optional[Dict[str, Any]] = None
+    try:
+        existing = get_agent_or_404(agent_id)
+    except HTTPException:
+        existing = None
+
+    candidate = build_workbench_agent_candidate(agent_payload, existing)
+    backup_version = backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=normalize_text(payload.get("note"), f"workbench apply {agent_id}"),
+        created_by=user["username"],
+    )
+
+    agent_dir = AGENTS_DIR / agent_id
+    if not agent_dir.exists():
+        agent_dir.mkdir(parents=True, exist_ok=False)
+    saved_agent = save_agent_config(agent_dir, candidate)
+
+    cfg = merge_agent_into_openclaw_config(saved_agent)
+    write_json_file(OPENCLAW_DIR / "openclaw.json", cfg)
+
+    restart = bool(payload.get("restart_gateway", True))
+    gateway = restart_gateway() if restart else {"ok": True, "code": 0, "stdout": "skip restart", "stderr": ""}
+    return {
+        "status": "success",
+        "backup_version": backup_version,
+        "agent": saved_agent,
+        "gateway": gateway,
+    }
+
+
+@app.post("/api/workbench/route-test")
+async def api_workbench_route_test(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    payload = await parse_payload(request)
+    entry = normalize_text(payload.get("entry"))
+    if not entry:
+        raise HTTPException(status_code=400, detail="entry cannot be empty")
+    matches = route_test(entry)
+    return {"status": "success", "entry": entry, "matches": matches}
+
+
+@app.post("/api/workbench/restart")
+async def api_workbench_restart(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    return {"status": "success", "gateway": restart_gateway()}
 
 
 @app.get("/api/models")

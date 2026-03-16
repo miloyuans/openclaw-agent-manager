@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OpenClaw Agent Workbench</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #071224;
+      --panel: #102644cc;
+      --line: #7cb3ff66;
+      --txt: #e9f4ff;
+      --muted: #9fb9db;
+      --acc: #4adfff;
+      --acc2: #5a90ff;
+      --warn: #ffd77b;
+      --bad: #ff8ea9;
+      --shadow: 0 20px 44px rgba(0, 0, 0, .42);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Manrope, sans-serif;
+      color: var(--txt);
+      background:
+        radial-gradient(circle at 10% 10%, #4f83ff4d, transparent 36%),
+        radial-gradient(circle at 85% 12%, #4adfff33, transparent 34%),
+        linear-gradient(180deg, #061020, #081730);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(#5f92dc1a 1px, transparent 1px),
+        linear-gradient(90deg, #5f92dc1a 1px, transparent 1px);
+      background-size: 34px 34px;
+    }
+    .app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 10px;
+      padding: 10px;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      color: var(--muted);
+    }
+    .brand b { font-family: Orbitron, sans-serif; color: var(--txt); }
+    .mono { font-family: "JetBrains Mono", monospace; }
+    .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(460px, 1fr) minmax(360px, 0.9fr);
+      gap: 10px;
+      min-height: 0;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+    h2, h3 { margin: 0; font-size: 1rem; }
+    .sub { color: var(--muted); font-size: .82rem; }
+    .agent-list { display: grid; gap: 6px; max-height: calc(100vh - 210px); overflow: auto; }
+    .agent-item {
+      border: 1px solid #7cb3ff44;
+      border-radius: 10px;
+      padding: 8px;
+      cursor: pointer;
+      background: #0f2240b5;
+    }
+    .agent-item.active { border-color: var(--acc); background: #214070cc; }
+    .agent-item .id { font-family: "JetBrains Mono", monospace; font-weight: 700; }
+    .tag {
+      display: inline-block;
+      border: 1px solid #7cb3ff66;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: .72rem;
+      background: #4f7ec82a;
+      margin-left: 6px;
+    }
+    .warn-tag { border-color: #ffd77b88; background: #61471d77; color: #ffeab3; }
+    .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; }
+    .c12 { grid-column: span 12; }
+    .c8 { grid-column: span 8; }
+    .c6 { grid-column: span 6; }
+    .c4 { grid-column: span 4; }
+    .c3 { grid-column: span 3; }
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: .8rem; color: #c3d9f4; }
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid #7cb3ff77;
+      border-radius: 10px;
+      background: #081b38d4;
+      color: var(--txt);
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #4adfff;
+      box-shadow: 0 0 0 3px #4adfff22;
+    }
+    select[multiple] { min-height: 110px; }
+    textarea { min-height: 110px; resize: vertical; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      padding: 9px 12px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: linear-gradient(130deg, var(--acc), var(--acc2));
+      color: #031124;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn.sec { background: #4f7ec82a; color: #dcecff; border-color: var(--line); font-weight: 700; }
+    .btn.warn { background: linear-gradient(130deg, #ffdb8a, #ffad7f); color: #271403; }
+    .btn.bad { background: linear-gradient(130deg, #ff9db6, #ff7d9d); color: #2f0312; }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .pre {
+      border: 1px solid #7cb3ff40;
+      border-radius: 10px;
+      background: #09182faa;
+      padding: 10px;
+      max-height: 240px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .78rem;
+    }
+    .change-list { display: grid; gap: 6px; max-height: 140px; overflow: auto; }
+    .change-item {
+      border: 1px solid #7cb3ff40;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .76rem;
+      background: #0f2240b5;
+    }
+    .toast {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 20;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0f2342ee;
+      color: #eef7ff;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: .2s;
+      pointer-events: none;
+      max-width: 380px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.err { border-color: #ff8ea9bb; }
+    @media (max-width: 1380px) {
+      .layout { grid-template-columns: 260px 1fr; }
+      .right { grid-column: span 2; }
+    }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .right { grid-column: span 1; }
+      .agent-list { max-height: 240px; }
+      .c8, .c6, .c4, .c3 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <b>OpenClaw Agent Workbench</b>
+      <div class="sub" id="topMeta"></div>
+    </div>
+    <div class="actions">
+      <select id="lang" title="Language">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+      </select>
+      <button class="btn sec" id="reloadBtn">Reload</button>
+      <button class="btn sec" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <section class="layout">
+    <aside class="card">
+      <h2 id="tAgents">Agents</h2>
+      <div class="row">
+        <button class="btn" id="newAgentBtn">New Agent</button>
+        <button class="btn sec" id="importBtn">Import</button>
+      </div>
+      <div class="sub" id="agentCount"></div>
+      <div class="agent-list" id="agentList"></div>
+    </aside>
+
+    <main class="card">
+      <h2 id="tEditor">Agent Editor</h2>
+      <div class="grid">
+        <div class="c4 field"><label id="lId">Agent ID</label><input id="fId" class="mono"></div>
+        <div class="c4 field"><label id="lProfile">Model Profile</label><select id="fProfile"></select></div>
+        <div class="c4 field"><label id="lModel">Fallback Model</label><select id="fModel"></select></div>
+        <div class="c4 field" id="customWrap" hidden><label id="lCustomModel">Custom Model</label><input id="fCustomModel"></div>
+
+        <div class="c4 field"><label id="lEntry">Chat Entry</label><input id="fEntry" class="mono"></div>
+        <div class="c4 field"><label id="lChannels">Channels</label><select id="fChannels" multiple></select></div>
+        <div class="c4 field"><label id="lDefaultChannel">Default Channel</label><select id="fDefaultChannel"></select></div>
+
+        <div class="c3 field"><label id="lAuthType">Auth Type</label><select id="fAuthType"><option value="token">token</option><option value="password">password</option></select></div>
+        <div class="c9 field"><label id="lAuthValue">Token / Password</label><input id="fAuthValue" class="mono"></div>
+
+        <div class="c6 field"><label id="lSkills">Skills</label><select id="fSkills" multiple></select></div>
+        <div class="c6 field"><label id="lMcps">MCP</label><select id="fMcps" multiple></select></div>
+
+        <div class="c4 field"><label id="lVersion">Version</label><input id="fVersion" class="mono" value="{{ suggested_version }}"></div>
+        <div class="c8 field"><label id="lNote">Apply Note</label><input id="fNote"></div>
+        <div class="c12 field"><label><input type="checkbox" id="fRestart" checked> <span id="lRestart">Restart Gateway after apply</span></label></div>
+      </div>
+      <div class="row">
+        <button class="btn sec" id="previewBtn">Preview</button>
+        <button class="btn warn" id="applyBtn">Apply to OpenClaw</button>
+        <button class="btn sec" id="saveDraftBtn">Save Draft</button>
+        <button class="btn sec" id="loadDraftBtn">Load Draft</button>
+      </div>
+    </main>
+
+    <aside class="card right">
+      <h2 id="tPreview">Preview & Ops</h2>
+      <div class="field">
+        <label id="lRouteTest">Route Tester (entry)</label>
+        <div class="row">
+          <input id="routeInput" class="mono" placeholder="telegram:main">
+          <button class="btn sec" id="routeBtn">Test</button>
+        </div>
+      </div>
+      <div class="pre" id="routeResult">-</div>
+
+      <h3 id="tChanges">Changed Fields</h3>
+      <div class="change-list" id="changes"></div>
+
+      <h3 id="tAgentJson">Agent JSON Preview</h3>
+      <pre class="pre" id="agentPreview">-</pre>
+
+      <h3 id="tBinding">OpenClaw Binding Preview</h3>
+      <pre class="pre" id="bindingPreview">-</pre>
+
+      <div class="row">
+        <button class="btn sec" id="restartBtn">Restart Gateway</button>
+      </div>
+    </aside>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const MUST_CHANGE_PASSWORD = {{ "true" if must_change_password else "false" }};
+  const OPENCLAW_DIR = {{ openclaw_dir|tojson }};
+  const USERNAME = {{ username|tojson }};
+  const S = {
+    lang: "en",
+    agents: [],
+    models: [],
+    profiles: [],
+    channels: [],
+    skills: [],
+    mcps: [],
+    selectedId: "",
+    selected: null,
+    suggestedVersion: "{{ suggested_version }}",
+  };
+
+  const I18N = {
+    en: {
+      agents: "Agents",
+      editor: "Agent Editor",
+      preview: "Preview & Ops",
+      id: "Agent ID",
+      profile: "Model Profile",
+      model: "Fallback Model",
+      custom_model: "Custom Model",
+      entry: "Chat Entry",
+      channels: "Channels",
+      default_channel: "Default Channel",
+      auth_type: "Auth Type",
+      auth_value: "Token / Password",
+      skills: "Skills",
+      mcps: "MCP",
+      version: "Version",
+      note: "Apply Note",
+      restart_after: "Restart Gateway after apply",
+      route_test: "Route Tester (entry)",
+      changes: "Changed Fields",
+      agent_json: "Agent JSON Preview",
+      binding: "OpenClaw Binding Preview",
+      none: "None",
+      new_agent: "New Agent",
+      import: "Import",
+      refresh: "Reload",
+      logout: "Logout",
+      preview_btn: "Preview",
+      apply_btn: "Apply to OpenClaw",
+      save_draft: "Save Draft",
+      load_draft: "Load Draft",
+      route_btn: "Test",
+      restart_btn: "Restart Gateway",
+      must_change: "Default password still active. Please change it in Security API.",
+      select_agent: "Please select or create an agent",
+      enter_id: "Enter agent id",
+      invalid_id: "Invalid agent id",
+      copied: "Saved",
+      loaded: "Loaded",
+      applied: "Applied",
+      restarted: "Gateway restart requested",
+      imported: "Imported from local OpenClaw config",
+      route_none: "No route matched",
+    },
+    zh: {
+      agents: "Agent 列表",
+      editor: "Agent 编辑器",
+      preview: "预览与操作",
+      id: "Agent ID",
+      profile: "模型配置",
+      model: "回退模型",
+      custom_model: "自定义模型",
+      entry: "聊天入口 Entry",
+      channels: "Channels",
+      default_channel: "默认 Channel",
+      auth_type: "授权类型",
+      auth_value: "Token / 密码",
+      skills: "Skills",
+      mcps: "MCP",
+      version: "版本号",
+      note: "变更备注",
+      restart_after: "应用后重启 Gateway",
+      route_test: "路由测试（entry）",
+      changes: "变化字段",
+      agent_json: "Agent JSON 预览",
+      binding: "OpenClaw Binding 预览",
+      none: "无",
+      new_agent: "新建 Agent",
+      import: "导入",
+      refresh: "刷新",
+      logout: "退出",
+      preview_btn: "预览",
+      apply_btn: "应用到 OpenClaw",
+      save_draft: "保存草稿",
+      load_draft: "加载草稿",
+      route_btn: "测试",
+      restart_btn: "重启 Gateway",
+      must_change: "检测到默认密码，请尽快修改。",
+      select_agent: "请先选择或新建 Agent",
+      enter_id: "请输入 agent id",
+      invalid_id: "agent id 不合法",
+      copied: "已保存",
+      loaded: "已加载",
+      applied: "已应用",
+      restarted: "已请求重启 Gateway",
+      imported: "已从本地 OpenClaw 配置导入",
+      route_none: "未命中任何路由",
+    },
+  };
+
+  const AGENT_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{1,39}$/;
+  const el = (id) => document.getElementById(id);
+  const toast = el("toast");
+  const t = (k) => (I18N[S.lang] && I18N[S.lang][k]) || I18N.en[k] || k;
+  const esc = (v) => String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  const uniq = (arr) => [...new Set(arr.map((v) => String(v).trim()).filter(Boolean))];
+  const pick = (arr, id) => arr.find((x) => String(x.id) === String(id));
+  const getMulti = (id) => [...el(id).options].filter((o) => o.selected).map((o) => o.value).filter(Boolean);
+  const setMulti = (id, vals) => {
+    const s = new Set(uniq(vals || []));
+    [...el(id).options].forEach((o) => { o.selected = s.has(o.value); });
+  };
+
+  const note = (m, err = false) => {
+    toast.textContent = m || "";
+    toast.classList.add("show");
+    toast.classList.toggle("err", err);
+    clearTimeout(note.t);
+    note.t = setTimeout(() => toast.classList.remove("show"), 2600);
+  };
+
+  const api = async (u, m = "GET", b = null) => {
+    const o = { method: m, credentials: "same-origin", headers: { "Content-Type": "application/json" } };
+    if (b !== null) o.body = JSON.stringify(b);
+    const r = await fetch(u, o);
+    if (r.status === 401) {
+      location.href = "/login";
+      throw new Error("Session expired");
+    }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || d.detail || "Request failed");
+    return d;
+  };
+
+  const setOptions = (id, rows, val, lab, none = false) => {
+    let h = none ? `<option value="">${esc(t("none"))}</option>` : "";
+    h += rows.map((r) => `<option value="${esc(val(r))}">${esc(lab(r))}</option>`).join("");
+    el(id).innerHTML = h;
+  };
+
+  const modelOptionsHtml = () => {
+    const groups = {};
+    S.models.forEach((m) => ((groups[m.provider || "Custom"] ??= []).push(m)));
+    let h = "";
+    Object.keys(groups).sort().forEach((provider) => {
+      h += `<optgroup label="${esc(provider)}">`;
+      groups[provider].forEach((m) => {
+        h += `<option value="${esc(m.model)}">${esc(m.label || m.model)} (${esc(m.model)})</option>`;
+      });
+      h += "</optgroup>";
+    });
+    h += `<option value="__custom__">Custom model...</option>`;
+    return h;
+  };
+
+  const refreshDefaultChannel = (prefer = "") => {
+    const selected = getMulti("fChannels").map((id) => pick(S.channels, id)).filter(Boolean);
+    setOptions("fDefaultChannel", selected, (x) => x.id, (x) => `${x.name} [${x.entry}]`, true);
+    if (prefer && selected.some((x) => x.id === prefer)) el("fDefaultChannel").value = prefer;
+    else if (selected.length) el("fDefaultChannel").value = selected[0].id;
+  };
+
+  const renderLabels = () => {
+    el("tAgents").textContent = t("agents");
+    el("tEditor").textContent = t("editor");
+    el("tPreview").textContent = t("preview");
+    el("lId").textContent = t("id");
+    el("lProfile").textContent = t("profile");
+    el("lModel").textContent = t("model");
+    el("lCustomModel").textContent = t("custom_model");
+    el("lEntry").textContent = t("entry");
+    el("lChannels").textContent = t("channels");
+    el("lDefaultChannel").textContent = t("default_channel");
+    el("lAuthType").textContent = t("auth_type");
+    el("lAuthValue").textContent = t("auth_value");
+    el("lSkills").textContent = t("skills");
+    el("lMcps").textContent = t("mcps");
+    el("lVersion").textContent = t("version");
+    el("lNote").textContent = t("note");
+    el("lRestart").textContent = t("restart_after");
+    el("lRouteTest").textContent = t("route_test");
+    el("tChanges").textContent = t("changes");
+    el("tAgentJson").textContent = t("agent_json");
+    el("tBinding").textContent = t("binding");
+    el("newAgentBtn").textContent = t("new_agent");
+    el("importBtn").textContent = t("import");
+    el("reloadBtn").textContent = t("refresh");
+    el("logoutBtn").textContent = t("logout");
+    el("previewBtn").textContent = t("preview_btn");
+    el("applyBtn").textContent = t("apply_btn");
+    el("saveDraftBtn").textContent = t("save_draft");
+    el("loadDraftBtn").textContent = t("load_draft");
+    el("routeBtn").textContent = t("route_btn");
+    el("restartBtn").textContent = t("restart_btn");
+    document.documentElement.lang = S.lang === "zh" ? "zh-CN" : "en";
+  };
+
+  const renderAgentList = () => {
+    const box = el("agentList");
+    if (!S.agents.length) {
+      box.innerHTML = `<div class="sub">${esc(t("none"))}</div>`;
+      return;
+    }
+    box.innerHTML = S.agents.map((a) => `
+      <div class="agent-item ${S.selectedId === a.id ? "active" : ""}" data-id="${esc(a.id)}">
+        <div class="id">${esc(a.id)}</div>
+        <div class="sub">${esc(a.chat_entry || "-")} <span class="tag">${esc(a.source || "manager")}</span></div>
+      </div>
+    `).join("");
+    box.querySelectorAll(".agent-item").forEach((n) => {
+      n.onclick = () => {
+        const id = n.dataset.id || "";
+        selectAgent(id);
+      };
+    });
+    el("agentCount").textContent = `${S.agents.length} agents`;
+  };
+
+  const populateEditorOptions = () => {
+    setOptions("fProfile", S.profiles, (x) => x.id, (x) => `${x.name} (${x.model})`, true);
+    setOptions("fChannels", S.channels, (x) => x.id, (x) => `${x.name} [${x.entry}]`);
+    setOptions("fSkills", S.skills, (x) => x.id, (x) => `${x.name} [${x.entry}]`);
+    setOptions("fMcps", S.mcps, (x) => x.id, (x) => `${x.name} (${x.transport})`);
+    el("fModel").innerHTML = modelOptionsHtml();
+  };
+
+  const setModelCustomVisibility = () => {
+    const custom = el("fModel").value === "__custom__";
+    el("customWrap").hidden = !custom;
+  };
+
+  const fillForm = (agent) => {
+    el("fId").value = agent.id || "";
+    el("fProfile").value = agent.model_profile_id || "";
+    setMulti("fChannels", agent.channel_ids || []);
+    refreshDefaultChannel(agent.default_channel_id || "");
+    setMulti("fSkills", agent.skill_ids || []);
+    setMulti("fMcps", agent.mcp_ids || []);
+    el("fAuthType").value = agent.auth_type || "token";
+    el("fAuthValue").value = agent.token_or_pass || "";
+    el("fEntry").value = agent.chat_entry || "default";
+    el("fVersion").value = S.suggestedVersion || "{{ suggested_version }}";
+    el("fNote").value = `workbench apply ${agent.id || "agent"}`;
+
+    const defModel = (agent.models || []).find((m) => String(m.id) === String(agent.default_model_id));
+    const m = (defModel || {}).model || agent.model || "";
+    const has = S.models.some((x) => String(x.model) === String(m));
+    el("fModel").value = has ? m : "__custom__";
+    el("fCustomModel").value = has ? "" : m;
+    setModelCustomVisibility();
+  };
+
+  const selectAgent = (id) => {
+    const a = pick(S.agents, id);
+    if (!a) return;
+    S.selectedId = id;
+    S.selected = a;
+    fillForm(a);
+    renderAgentList();
+  };
+
+  const collectForm = () => {
+    const id = String(el("fId").value || "").trim();
+    if (!AGENT_ID_RE.test(id)) throw new Error(t("invalid_id"));
+    const model = el("fModel").value === "__custom__"
+      ? String(el("fCustomModel").value || "").trim()
+      : String(el("fModel").value || "").trim();
+    return {
+      id,
+      model_profile_id: String(el("fProfile").value || "").trim(),
+      model,
+      chat_entry: String(el("fEntry").value || "").trim(),
+      channel_ids: getMulti("fChannels"),
+      default_channel_id: String(el("fDefaultChannel").value || "").trim(),
+      skill_ids: getMulti("fSkills"),
+      mcp_ids: getMulti("fMcps"),
+      auth_type: String(el("fAuthType").value || "token"),
+      token_or_pass: String(el("fAuthValue").value || "").trim(),
+    };
+  };
+
+  const renderPreview = (d) => {
+    const changes = d.changed_fields || [];
+    el("changes").innerHTML = changes.length
+      ? changes.map((x) => `<div class="change-item">${esc(x)}</div>`).join("")
+      : `<div class="sub">${esc(t("none"))}</div>`;
+    el("agentPreview").textContent = JSON.stringify(d.candidate || {}, null, 2);
+    el("bindingPreview").textContent = JSON.stringify(d.binding_preview || {}, null, 2);
+  };
+
+  const loadState = async (keepSelection = true) => {
+    const d = await api("/api/workbench/state");
+    S.agents = d.agents || [];
+    S.models = d.models || [];
+    S.profiles = d.model_profiles || [];
+    S.channels = d.channels || [];
+    S.skills = d.skills || [];
+    S.mcps = d.mcp_servers || [];
+    S.suggestedVersion = d.suggested_version || "{{ suggested_version }}";
+
+    el("topMeta").textContent = `${USERNAME} | ${OPENCLAW_DIR}`;
+    populateEditorOptions();
+    renderAgentList();
+    if (keepSelection && S.selectedId && S.agents.some((a) => a.id === S.selectedId)) {
+      selectAgent(S.selectedId);
+    } else if (S.agents.length) {
+      selectAgent(S.agents[0].id);
+    }
+  };
+
+  const routeTestRun = async () => {
+    const entry = String(el("routeInput").value || "").trim();
+    if (!entry) return;
+    const d = await api("/api/workbench/route-test", "POST", { entry });
+    const rows = d.matches || [];
+    if (!rows.length) {
+      el("routeResult").textContent = t("route_none");
+      return;
+    }
+    el("routeResult").textContent = rows.map((r) => `${r.entry} -> ${r.agent_id} (${r.source})`).join("\n");
+  };
+
+  const draftKey = () => `openclaw_workbench_draft_${String(el("fId").value || "").trim()}`;
+
+  const bindEvents = () => {
+    el("lang").onchange = () => {
+      S.lang = el("lang").value || "en";
+      localStorage.setItem("ocm_lang_v2", S.lang);
+      renderLabels();
+      renderAgentList();
+    };
+    el("reloadBtn").onclick = async () => {
+      try { await loadState(true); note("Reloaded"); } catch (e) { note(e.message, true); }
+    };
+    el("logoutBtn").onclick = async () => {
+      try { await api("/api/logout", "POST", {}); } finally { location.href = "/login"; }
+    };
+
+    el("newAgentBtn").onclick = () => {
+      const id = prompt(t("enter_id"), "agent-main");
+      if (!id) return;
+      const cleaned = String(id).trim();
+      if (!AGENT_ID_RE.test(cleaned)) return note(t("invalid_id"), true);
+      S.selectedId = cleaned;
+      S.selected = { id: cleaned, channel_ids: [], skill_ids: [], mcp_ids: [], auth_type: "token", chat_entry: "default" };
+      fillForm(S.selected);
+      renderAgentList();
+    };
+
+    el("importBtn").onclick = async () => {
+      try { await loadState(false); note(t("imported")); } catch (e) { note(e.message, true); }
+    };
+
+    el("fModel").onchange = setModelCustomVisibility;
+    el("fChannels").onchange = () => refreshDefaultChannel(el("fDefaultChannel").value);
+
+    el("previewBtn").onclick = async () => {
+      try {
+        const agent = collectForm();
+        const d = await api("/api/workbench/preview", "POST", { agent });
+        renderPreview(d);
+      } catch (e) {
+        note(e.message, true);
+      }
+    };
+
+    el("applyBtn").onclick = async () => {
+      try {
+        const agent = collectForm();
+        const d = await api("/api/workbench/apply", "POST", {
+          agent,
+          version: String(el("fVersion").value || "").trim(),
+          note: String(el("fNote").value || "").trim(),
+          restart_gateway: !!el("fRestart").checked,
+        });
+        note(`${t("applied")} (backup: ${d.backup_version || "-"})`);
+        await loadState(true);
+        const p = await api("/api/workbench/preview", "POST", { agent });
+        renderPreview(p);
+      } catch (e) {
+        note(e.message, true);
+      }
+    };
+
+    el("saveDraftBtn").onclick = () => {
+      try {
+        const agent = collectForm();
+        localStorage.setItem(draftKey(), JSON.stringify(agent));
+        note(t("copied"));
+      } catch (e) {
+        note(e.message, true);
+      }
+    };
+
+    el("loadDraftBtn").onclick = () => {
+      const raw = localStorage.getItem(draftKey());
+      if (!raw) return note(t("none"), true);
+      try {
+        const d = JSON.parse(raw);
+        if (!d || typeof d !== "object") throw new Error("bad draft");
+        S.selectedId = String(d.id || "");
+        fillForm(d);
+        note(t("loaded"));
+      } catch (e) {
+        note(String(e.message || e), true);
+      }
+    };
+
+    el("routeBtn").onclick = async () => {
+      try { await routeTestRun(); } catch (e) { note(e.message, true); }
+    };
+
+    el("restartBtn").onclick = async () => {
+      try {
+        await api("/api/workbench/restart", "POST", {});
+        note(t("restarted"));
+      } catch (e) {
+        note(e.message, true);
+      }
+    };
+  };
+
+  const boot = async () => {
+    const savedLang = localStorage.getItem("ocm_lang_v2");
+    S.lang = savedLang === "zh" || savedLang === "en" ? savedLang : (navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
+    el("lang").value = S.lang;
+    renderLabels();
+    bindEvents();
+    try {
+      await loadState(false);
+      if (MUST_CHANGE_PASSWORD) note(t("must_change"), true);
+    } catch (e) {
+      note(String(e.message || e), true);
+    }
+  };
+
+  boot();
+})();
+</script>
+</body>
+</html>
+

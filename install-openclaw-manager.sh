@@ -143,6 +143,7 @@ if [ -d "$SCRIPT_DIR/core" ]; then
 fi
 mkdir -p "$INSTALL_DIR/templates"
 cp "$SCRIPT_DIR/templates/index.html" "$INSTALL_DIR/templates/index.html"
+cp "$SCRIPT_DIR/templates/index_workbench.html" "$INSTALL_DIR/templates/index_workbench.html" || true
 cp "$SCRIPT_DIR/templates/login.html" "$INSTALL_DIR/templates/login.html"
 
 cat > "$INSTALL_DIR/start.sh" <<EOF
