@@ -43,7 +43,6 @@ SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
 PASSWORD_ITERATIONS = 260_000
 AGENT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{1,39}$")
 AUTH_FLOW_TTL_SECONDS = 60 * 10
-APP_PORT = int(os.getenv("OPENCLAW_PORT", "8080"))
 FORCE_HEADLESS = os.getenv("OPENCLAW_HEADLESS", "").lower() in {
     "1",
     "true",
@@ -63,6 +62,41 @@ template_env = Environment(
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+def parse_port_candidate(raw: Optional[str]) -> Optional[int]:
+    if raw is None:
+        return None
+    text = str(raw).strip()
+    if not text:
+        return None
+    if text.isdigit():
+        port = int(text)
+        return port if 1 <= port <= 65535 else None
+
+    try:
+        parsed = urlparse(text)
+        if parsed.port and 1 <= parsed.port <= 65535:
+            return parsed.port
+    except Exception:
+        pass
+
+    match = re.search(r":(\d{1,5})(?:/|$)", text)
+    if match:
+        port = int(match.group(1))
+        return port if 1 <= port <= 65535 else None
+    return None
+
+
+def resolve_app_port(default: int = 8080) -> int:
+    for key in ("OPENCLAW_PORT", "PORT"):
+        parsed = parse_port_candidate(os.getenv(key))
+        if parsed is not None:
+            return parsed
+    return default
+
+
+APP_PORT = resolve_app_port(8080)
 
 
 def read_json_file(path: Path, default: Any) -> Any:
