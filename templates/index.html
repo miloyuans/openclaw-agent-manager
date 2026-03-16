@@ -1,5 +1,5 @@
-<!doctype html>
-<html lang="zh-CN">
+﻿<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,19 +8,35 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#081424;--panel:#12233dcc;--line:#7ab0ff55;--txt:#eef6ff;--muted:#a4b8d6;--acc:#46d9ff;--err:#ff7f9b}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Manrope,sans-serif;color:var(--txt);background:radial-gradient(circle at 10% 10%,#4779ff44,transparent 35%),radial-gradient(circle at 85% 12%,#46d9ff33,transparent 35%),var(--bg)}
-    .app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}.side{padding:12px;border-right:1px solid var(--line);background:#0a1830d9;display:grid;gap:8px;align-content:start}
-    .brand{padding:10px;border:1px solid var(--line);border-radius:10px;font-weight:800}.nav{padding:9px 10px;border:1px solid transparent;border-radius:10px;background:#4f7cc223;color:#d9e8ff;cursor:pointer;text-align:left;font-weight:700}.nav.active{border-color:var(--line);background:#46d9ff22}
-    .main{padding:12px;display:grid;gap:10px}.top{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted)}
-    .page{display:none;gap:10px}.page.active{display:grid}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px}.c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}
-    .card{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}h2,h3{margin:0 0 10px;font-weight:800;font-size:1rem}
+    :root{--bg:#081424;--panel:#12233dcc;--line:#7ab0ff55;--txt:#eef6ff;--muted:#a4b8d6;--err:#ff7f9b}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Manrope,sans-serif;color:var(--txt);background:radial-gradient(circle at 10% 10%,#4779ff44,transparent 35%),radial-gradient(circle at 85% 12%,#46d9ff33,transparent 35%),var(--bg)}
+    .app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+    .side{padding:12px;border-right:1px solid var(--line);background:#0a1830d9;display:grid;gap:8px;align-content:start}
+    .brand{padding:10px;border:1px solid var(--line);border-radius:10px;font-weight:800}
+    .nav{padding:9px 10px;border:1px solid transparent;border-radius:10px;background:#4f7cc223;color:#d9e8ff;cursor:pointer;text-align:left;font-weight:700}
+    .nav.active{border-color:var(--line);background:#46d9ff22}
+    .main{padding:12px;display:grid;gap:10px}
+    .top{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted)}
+    .page{display:none;gap:10px}
+    .page.active{display:grid}
+    .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px}
+    .c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}
+    .card{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+    h2,h3{margin:0 0 10px;font-weight:800;font-size:1rem}
     .field{display:grid;gap:6px;margin:0 0 8px}.field label{color:#bdd0ec;font-size:.83rem}
-    input,select,textarea{width:100%;padding:9px 10px;border:1px solid #7ab0ff59;border-radius:9px;background:#091a35cc;color:var(--txt);font:.82rem "JetBrains Mono",monospace;outline:none}textarea{min-height:70px;resize:vertical}
-    .row{display:flex;gap:8px;flex-wrap:wrap}.btn{padding:9px 12px;border:1px solid transparent;border-radius:9px;background:linear-gradient(135deg,#46d9ff,#4f80ff);color:#031124;font-weight:800;cursor:pointer}.btn.sec{background:#4f7cc226;color:#d9e8ff;border-color:var(--line)}.btn.danger{background:linear-gradient(135deg,#ff9ab0,#ff6b8e);color:#2d0211}
-    table{width:100%;border-collapse:collapse;font-size:.82rem}th,td{padding:8px 6px;border-bottom:1px solid #7ab0ff33;text-align:left}th{font-size:.74rem;color:#c7dcff;text-transform:uppercase}.mono{font-family:"JetBrains Mono",monospace}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.tab{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#4f7cc226;color:#d9e8ff;cursor:pointer;font-weight:700}.tab.active{background:#46d9ff22}.tabp{display:none}.tabp.active{display:block}
-    .warn{padding:8px 10px;border:1px solid #ffd78088;background:#60451866;border-radius:10px;color:#ffe8b0;margin-bottom:10px}.manual{padding:10px;border:1px dashed #7ab0ff88;border-radius:10px;background:#1a2d4f77}.manual[hidden]{display:none}
+    input,select,textarea{width:100%;padding:9px 10px;border:1px solid #7ab0ff59;border-radius:9px;background:#091a35cc;color:var(--txt);font:.82rem "JetBrains Mono",monospace;outline:none}
+    textarea{min-height:70px;resize:vertical}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{padding:9px 12px;border:1px solid transparent;border-radius:9px;background:linear-gradient(135deg,#46d9ff,#4f80ff);color:#031124;font-weight:800;cursor:pointer}
+    .btn.sec{background:#4f7cc226;color:#d9e8ff;border-color:var(--line)}
+    .btn.danger{background:linear-gradient(135deg,#ff9ab0,#ff6b8e);color:#2d0211}
+    table{width:100%;border-collapse:collapse;font-size:.82rem}th,td{padding:8px 6px;border-bottom:1px solid #7ab0ff33;text-align:left}th{font-size:.74rem;color:#c7dcff;text-transform:uppercase}
+    .mono{font-family:"JetBrains Mono",monospace}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.tab{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#4f7cc226;color:#d9e8ff;cursor:pointer;font-weight:700}.tab.active{background:#46d9ff22}
+    .tabp{display:none}.tabp.active{display:block}
+    .warn{padding:8px 10px;border:1px solid #ffd78088;background:#60451866;border-radius:10px;color:#ffe8b0;margin-bottom:10px}
+    .manual{padding:10px;border:1px dashed #7ab0ff88;border-radius:10px;background:#1a2d4f77}.manual[hidden]{display:none}
     .kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.k{padding:10px;border:1px solid var(--line);border-radius:10px;background:#172c4eaa}.k small{color:var(--muted)}.k b{display:block;font-size:1.2rem;margin-top:4px}
     .toast{position:fixed;right:14px;bottom:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#10203bcc;color:#eef6ff;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;max-width:380px}.toast.show{opacity:1;transform:translateY(0)}.toast.err{border-color:#ff7f9bbb}
     @media(max-width:1080px){.app{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid var(--line)}.kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.c8,.c7,.c6,.c5,.c4{grid-column:span 12}}
@@ -30,113 +46,105 @@
 <div class="app">
   <aside class="side">
     <div class="brand">OpenClaw Manager</div>
-    <button class="nav active" data-p="dash">æ€»è§ˆ</button>
-    <button class="nav" data-p="agents">Agentç®¡ç†</button>
-    <button class="nav" data-p="versions">ç‰ˆæœ¬ç®¡ç†</button>
-    <button class="nav" data-p="auth">é‰´æƒæ•èŽ·</button>
-    <button class="nav" data-p="security">è´¦æˆ·å®‰å…¨</button>
-    <button class="nav" data-p="settings">ç³»ç»Ÿè®¾ç½®</button>
-    <button class="btn sec" id="refreshBtn" type="button">åˆ·æ–°æ•°æ®</button>
-    <button class="btn sec" id="logoutBtn" type="button">é€€å‡ºç™»å½•</button>
+    <button class="nav active" data-p="dash">Dashboard</button>
+    <button class="nav" data-p="agents">Agent Manager</button>
+    <button class="nav" data-p="versions">Version History</button>
+    <button class="nav" data-p="auth">Auth Capture</button>
+    <button class="nav" data-p="security">Account Security</button>
+    <button class="nav" data-p="settings">System Settings</button>
+    <button class="btn sec" id="refreshBtn" type="button">Refresh</button>
+    <button class="btn sec" id="logoutBtn" type="button">Logout</button>
   </aside>
   <main class="main">
     <header class="top">
-      <div>ç”¨æˆ·ï¼š<b>{{ username }}</b> | OpenClawï¼š<b class="mono">{{ openclaw_dir }}</b></div>
-      <div>æŽ¨èç‰ˆæœ¬ï¼š<b id="nextVer">{{ suggested_version }}</b> | é‰´æƒï¼š<b>{{ "GUIå¼¹çª—" if gui_available else "Headless URL" }}</b></div>
+      <div>User: <b>{{ username }}</b> | OpenClaw: <b class="mono">{{ openclaw_dir }}</b></div>
+      <div>Suggested version: <b id="nextVer">{{ suggested_version }}</b> | Auth mode: <b>{{ "GUI popup" if gui_available else "Headless URL" }}</b></div>
     </header>
 
     <section class="page active" id="p-dash">
-      <div class="card">
-        <h2>ç³»ç»Ÿæ€»è§ˆ</h2>
-        <div class="kpi">
-          <div class="k"><small>Agent</small><b id="kAgents">0</b></div>
-          <div class="k"><small>åŽ†å²ç‰ˆæœ¬</small><b id="kBackups">0</b></div>
-          <div class="k"><small>æ¨¡åž‹ç›®å½•</small><b id="kModels">0</b></div>
-          <div class="k"><small>ä¿ç•™ç­–ç•¥</small><b id="kKeep">{{ max_history }}</b></div>
-        </div>
-      </div>
+      <div class="card"><h2>System Overview</h2><div class="kpi"><div class="k"><small>Agents</small><b id="kAgents">0</b></div><div class="k"><small>Backups</small><b id="kBackups">0</b></div><div class="k"><small>Models</small><b id="kModels">0</b></div><div class="k"><small>Retention</small><b id="kKeep">{{ max_history }}</b></div></div></div>
     </section>
 
     <section class="page" id="p-agents">
       <div class="grid">
         <div class="card c5">
-          <h2>åˆ›å»º Agent</h2>
+          <h2>Create Agent</h2>
           <form id="fCreateAgent">
             <div class="field"><label>Agent ID</label><input id="caId" required></div>
-            <div class="field"><label>æ¨¡åž‹ä¸‹æ‹‰</label><select id="caModel"></select></div>
-            <div class="field" id="caCustomWrap" style="display:none;"><label>è‡ªå®šä¹‰æ¨¡åž‹</label><input id="caCustom"></div>
-            <div class="field"><label>åˆå§‹èŠå¤©å…¥å£</label><input id="caChat" value="default"></div>
-            <div class="field"><label>åˆå§‹èŠå¤©åç§°</label><input id="caChatName" value="é»˜è®¤èŠå¤©"></div>
-            <div class="field"><label>æŽˆæƒæ–¹å¼</label><select id="caAuth"><option value="token">API Token</option><option value="password">å¯†ç ç™»å½•</option></select></div>
-            <div class="field"><label>Token/å¯†ç </label><input id="caToken"></div>
-            <div class="field"><label>å¤‡ä»½ç‰ˆæœ¬</label><input id="caVer" value="{{ suggested_version }}"></div>
-            <div class="row"><button class="btn" type="submit">åˆ›å»º</button></div>
+            <div class="field"><label>Model</label><select id="caModel"></select></div>
+            <div class="field" id="caCustomWrap" style="display:none;"><label>Custom Model</label><input id="caCustom"></div>
+            <div class="field"><label>Initial Chat Entry</label><input id="caChat" value="default"></div>
+            <div class="field"><label>Initial Chat Name</label><input id="caChatName" value="Default Chat"></div>
+            <div class="field"><label>Auth Type</label><select id="caAuth"><option value="token">API Token</option><option value="password">Password</option></select></div>
+            <div class="field"><label>Token / Password</label><input id="caToken"></div>
+            <div class="field"><label>Backup Version</label><input id="caVer" value="{{ suggested_version }}"></div>
+            <div class="row"><button class="btn" type="submit">Create</button></div>
           </form>
         </div>
         <div class="card c7">
-          <h2>Agent åˆ—è¡¨</h2>
-          <table><thead><tr><th>ID</th><th>é»˜è®¤æ¨¡åž‹</th><th>èŠå¤©å…¥å£</th><th>æ¨¡åž‹æ•°</th><th>èŠå¤©æ•°</th><th>æ›´æ–°æ—¶é—´</th></tr></thead><tbody id="tbAgents"></tbody></table>
+          <h2>Agent List</h2>
+          <table><thead><tr><th>ID</th><th>Default Model</th><th>Default Chat</th><th>Model Count</th><th>Chat Count</th><th>Updated At</th></tr></thead><tbody id="tbAgents"></tbody></table>
         </div>
         <div class="card c12">
-          <h2>Agent è¯¦æƒ…ï¼š<span id="dAgent" class="mono">æœªé€‰æ‹©</span></h2>
-          <div class="tabs"><button class="tab active" data-t="base">åŸºç¡€</button><button class="tab" data-t="models">æ¨¡åž‹é…ç½®</button><button class="tab" data-t="chats">èŠå¤©é…ç½®</button></div>
+          <h2>Agent Detail: <span id="dAgent" class="mono">None selected</span></h2>
+          <div class="tabs"><button class="tab active" data-t="base">Basic</button><button class="tab" data-t="models">Models</button><button class="tab" data-t="chats">Chats</button></div>
           <div class="tabp active" id="tp-base">
             <form id="fBase" class="grid">
-              <div class="c4 field"><label>æŽˆæƒæ–¹å¼</label><select id="bAuth"><option value="token">API Token</option><option value="password">å¯†ç ç™»å½•</option></select></div>
-              <div class="c8 field"><label>Token/å¯†ç </label><input id="bToken"></div>
-              <div class="c6 field"><label>é»˜è®¤æ¨¡åž‹</label><select id="bDefModel"></select></div>
-              <div class="c6 field"><label>é»˜è®¤èŠå¤©</label><select id="bDefChat"></select></div>
-              <div class="c6 field"><label>å¤‡ä»½ç‰ˆæœ¬</label><input id="bVer"></div>
-              <div class="c6 field"><button class="btn" type="submit">ä¿å­˜åŸºç¡€é…ç½®</button></div>
+              <div class="c4 field"><label>Auth Type</label><select id="bAuth"><option value="token">API Token</option><option value="password">Password</option></select></div>
+              <div class="c8 field"><label>Token / Password</label><input id="bToken"></div>
+              <div class="c6 field"><label>Default Model</label><select id="bDefModel"></select></div>
+              <div class="c6 field"><label>Default Chat</label><select id="bDefChat"></select></div>
+              <div class="c6 field"><label>Backup Version</label><input id="bVer"></div>
+              <div class="c6 field"><button class="btn" type="submit">Save Basic Settings</button></div>
             </form>
           </div>
           <div class="tabp" id="tp-models">
             <div class="grid">
-              <div class="c6"><h3>æ¨¡åž‹åˆ—è¡¨</h3><table><thead><tr><th>åç§°</th><th>æ¨¡åž‹</th><th>æä¾›æ–¹</th><th>æ“ä½œ</th></tr></thead><tbody id="tbModels"></tbody></table></div>
+              <div class="c6"><h3>Model List</h3><table><thead><tr><th>Name</th><th>Model</th><th>Provider</th><th>Action</th></tr></thead><tbody id="tbModels"></tbody></table></div>
               <div class="c6">
-                <h3>æ–°å¢žæ¨¡åž‹</h3>
+                <h3>Add Model</h3>
                 <form id="fAddModel">
-                  <div class="field"><label>æ¨¡åž‹ä¸‹æ‹‰</label><select id="amModel"></select></div>
-                  <div class="field" id="amCustomWrap" style="display:none;"><label>è‡ªå®šä¹‰æ¨¡åž‹</label><input id="amCustom"></div>
-                  <div class="field"><label>æ˜¾ç¤ºåç§°</label><input id="amName"></div>
-                  <div class="field"><label>æä¾›æ–¹</label><input id="amProvider"></div>
-                  <div class="field"><label><input type="checkbox" id="amDefault"> è®¾ä¸ºé»˜è®¤æ¨¡åž‹</label></div>
-                  <div class="field"><label>å¤‡ä»½ç‰ˆæœ¬</label><input id="amVer"></div>
-                  <div class="row"><button class="btn" type="submit">æ–°å¢žæ¨¡åž‹</button></div>
+                  <div class="field"><label>Model</label><select id="amModel"></select></div>
+                  <div class="field" id="amCustomWrap" style="display:none;"><label>Custom Model</label><input id="amCustom"></div>
+                  <div class="field"><label>Display Name</label><input id="amName"></div>
+                  <div class="field"><label>Provider</label><input id="amProvider"></div>
+                  <div class="field"><label><input type="checkbox" id="amDefault"> Set as default model</label></div>
+                  <div class="field"><label>Backup Version</label><input id="amVer"></div>
+                  <div class="row"><button class="btn" type="submit">Add</button></div>
                 </form>
-                <h3 style="margin-top:10px;">ç¼–è¾‘é€‰ä¸­æ¨¡åž‹</h3>
+                <h3 style="margin-top:10px;">Edit Selected Model</h3>
                 <form id="fEditModel">
-                  <div class="field"><label>æ˜¾ç¤ºåç§°</label><input id="emName"></div>
-                  <div class="field"><label>æ¨¡åž‹å</label><input id="emModel"></div>
-                  <div class="field"><label>æä¾›æ–¹</label><input id="emProvider"></div>
-                  <div class="field"><label><input type="checkbox" id="emDefault"> è®¾ä¸ºé»˜è®¤æ¨¡åž‹</label></div>
-                  <div class="field"><label>å¤‡ä»½ç‰ˆæœ¬</label><input id="emVer"></div>
-                  <div class="row"><button class="btn sec" type="submit">ä¿å­˜æ¨¡åž‹ä¿®æ”¹</button></div>
+                  <div class="field"><label>Display Name</label><input id="emName"></div>
+                  <div class="field"><label>Model</label><input id="emModel"></div>
+                  <div class="field"><label>Provider</label><input id="emProvider"></div>
+                  <div class="field"><label><input type="checkbox" id="emDefault"> Set as default model</label></div>
+                  <div class="field"><label>Backup Version</label><input id="emVer"></div>
+                  <div class="row"><button class="btn sec" type="submit">Save</button></div>
                 </form>
               </div>
             </div>
           </div>
           <div class="tabp" id="tp-chats">
             <div class="grid">
-              <div class="c6"><h3>èŠå¤©åˆ—è¡¨</h3><table><thead><tr><th>åç§°</th><th>å…¥å£</th><th>æ¨¡åž‹ID</th><th>æ“ä½œ</th></tr></thead><tbody id="tbChats"></tbody></table></div>
+              <div class="c6"><h3>Chat List</h3><table><thead><tr><th>Name</th><th>Entry</th><th>Model ID</th><th>Action</th></tr></thead><tbody id="tbChats"></tbody></table></div>
               <div class="c6">
-                <h3>æ–°å¢žèŠå¤©</h3>
+                <h3>Add Chat</h3>
                 <form id="fAddChat">
-                  <div class="field"><label>èŠå¤©åç§°</label><input id="acName"></div>
-                  <div class="field"><label>èŠå¤©å…¥å£</label><input id="acEntry"></div>
-                  <div class="field"><label>ç»‘å®šæ¨¡åž‹</label><select id="acModel"></select></div>
-                  <div class="field"><label><input type="checkbox" id="acDefault"> è®¾ä¸ºé»˜è®¤èŠå¤©</label></div>
-                  <div class="field"><label>å¤‡ä»½ç‰ˆæœ¬</label><input id="acVer"></div>
-                  <div class="row"><button class="btn" type="submit">æ–°å¢žèŠå¤©</button></div>
+                  <div class="field"><label>Name</label><input id="acName"></div>
+                  <div class="field"><label>Entry</label><input id="acEntry"></div>
+                  <div class="field"><label>Model</label><select id="acModel"></select></div>
+                  <div class="field"><label><input type="checkbox" id="acDefault"> Set as default chat</label></div>
+                  <div class="field"><label>Backup Version</label><input id="acVer"></div>
+                  <div class="row"><button class="btn" type="submit">Add</button></div>
                 </form>
-                <h3 style="margin-top:10px;">ç¼–è¾‘é€‰ä¸­èŠå¤©</h3>
+                <h3 style="margin-top:10px;">Edit Selected Chat</h3>
                 <form id="fEditChat">
-                  <div class="field"><label>èŠå¤©åç§°</label><input id="ecName"></div>
-                  <div class="field"><label>èŠå¤©å…¥å£</label><input id="ecEntry"></div>
-                  <div class="field"><label>ç»‘å®šæ¨¡åž‹</label><select id="ecModel"></select></div>
-                  <div class="field"><label><input type="checkbox" id="ecDefault"> è®¾ä¸ºé»˜è®¤èŠå¤©</label></div>
-                  <div class="field"><label>å¤‡ä»½ç‰ˆæœ¬</label><input id="ecVer"></div>
-                  <div class="row"><button class="btn sec" type="submit">ä¿å­˜èŠå¤©ä¿®æ”¹</button></div>
+                  <div class="field"><label>Name</label><input id="ecName"></div>
+                  <div class="field"><label>Entry</label><input id="ecEntry"></div>
+                  <div class="field"><label>Model</label><select id="ecModel"></select></div>
+                  <div class="field"><label><input type="checkbox" id="ecDefault"> Set as default chat</label></div>
+                  <div class="field"><label>Backup Version</label><input id="ecVer"></div>
+                  <div class="row"><button class="btn sec" type="submit">Save</button></div>
                 </form>
               </div>
             </div>
@@ -147,753 +155,74 @@
 
     <section class="page" id="p-versions">
       <div class="grid">
-        <div class="card c4">
-          <h2>åˆ›å»ºç‰ˆæœ¬</h2>
-          <form id="fBackup">
-            <div class="field"><label>ç‰ˆæœ¬å·ï¼ˆå¦‚ v1.0.0ï¼‰</label><input id="bkVer" value="{{ suggested_version }}"></div>
-            <div class="field"><label>å¤‡æ³¨</label><textarea id="bkNote"></textarea></div>
-            <div class="row"><button class="btn" type="submit">åˆ›å»ºå¤‡ä»½</button></div>
-          </form>
-        </div>
-        <div class="card c8">
-          <h2>åŽ†å²ç‰ˆæœ¬</h2>
-          <table><thead><tr><th>ç‰ˆæœ¬</th><th>æ—¶é—´</th><th>åˆ›å»ºè€…</th><th>å¤‡æ³¨</th><th>æ“ä½œ</th></tr></thead><tbody id="tbBackups"></tbody></table>
-        </div>
+        <div class="card c4"><h2>Create Backup</h2><form id="fBackup"><div class="field"><label>Version (example: v1.0.0)</label><input id="bkVer" value="{{ suggested_version }}"></div><div class="field"><label>Note</label><textarea id="bkNote"></textarea></div><div class="row"><button class="btn" type="submit">Create</button></div></form></div>
+        <div class="card c8"><h2>History Versions</h2><table><thead><tr><th>Version</th><th>Created At</th><th>Created By</th><th>Note</th><th>Action</th></tr></thead><tbody id="tbBackups"></tbody></table></div>
       </div>
     </section>
 
     <section class="page" id="p-auth">
       <div class="grid">
-        <div class="card c6">
-          <h2>è‡ªåŠ¨æ•èŽ·</h2>
-          <form id="fCapture">
-            <div class="field"><label>ç™»å½• URL</label><input id="auUrl" required></div>
-            <div class="field"><label>ç”¨æˆ·å/é‚®ç®±ï¼ˆå¯é€‰ï¼‰</label><input id="auUser"></div>
-            <div class="field"><label>å¯†ç ï¼ˆå¯é€‰ï¼‰</label><input id="auPass" type="password"></div>
-            <div class="row"><button class="btn" type="submit">å¼€å§‹æ•èŽ·</button><button class="btn sec" id="genAuth" type="button">ç”Ÿæˆé‰´æƒURL</button></div>
-          </form>
-        </div>
-        <div class="card c6">
-          <h2>URL é‰´æƒ</h2>
-          <div class="manual" id="manBox" hidden>
-            <div class="field"><label>é‰´æƒ URL</label><input id="manUrl" class="mono" readonly></div>
-            <div class="field"><label>State</label><input id="manState" class="mono" readonly></div>
-            <div class="row"><button class="btn sec" id="copyUrl" type="button">å¤åˆ¶URL</button><button class="btn sec" id="checkAuth" type="button">æ£€æŸ¥å›žè°ƒ</button></div>
-          </div>
-          <div class="field"><label>æ•èŽ·åˆ°çš„ Token</label><textarea id="auToken" readonly></textarea></div>
-        </div>
+        <div class="card c6"><h2>Auto Capture</h2><form id="fCapture"><div class="field"><label>Login URL</label><input id="auUrl" required></div><div class="field"><label>Username (optional)</label><input id="auUser"></div><div class="field"><label>Password (optional)</label><input id="auPass" type="password"></div><div class="row"><button class="btn" type="submit">Start Capture</button><button class="btn sec" id="genAuth" type="button">Generate Auth URL</button></div></form></div>
+        <div class="card c6"><h2>URL Auth</h2><div class="manual" id="manBox" hidden><div class="field"><label>Auth URL</label><input id="manUrl" class="mono" readonly></div><div class="field"><label>State</label><input id="manState" class="mono" readonly></div><div class="row"><button class="btn sec" id="copyUrl" type="button">Copy URL</button><button class="btn sec" id="checkAuth" type="button">Check Callback</button></div></div><div class="field"><label>Captured Token</label><textarea id="auToken" readonly></textarea></div></div>
       </div>
     </section>
 
     <section class="page" id="p-security">
-      <div class="card">
-        <h2>è´¦æˆ·å®‰å…¨</h2>
-        {% if must_change_password %}<div class="warn">å½“å‰ä»ä½¿ç”¨åˆå§‹å¯†ç ï¼Œè¯·ç«‹å³ä¿®æ”¹ã€‚</div>{% endif %}
-        <form id="fPwd" class="grid">
-          <div class="c4 field"><label>å½“å‰å¯†ç </label><input id="pwCur" type="password" required></div>
-          <div class="c4 field"><label>æ–°å¯†ç </label><input id="pwNew" type="password" required></div>
-          <div class="c4 field"><label>ç¡®è®¤æ–°å¯†ç </label><input id="pwOk" type="password" required></div>
-          <div class="c4 field"><button class="btn" type="submit">ä¿®æ”¹å¯†ç </button></div>
-        </form>
-      </div>
+      <div class="card"><h2>Account Security</h2>{% if must_change_password %}<div class="warn">You are still using the default password. Please change it now.</div>{% endif %}<form id="fPwd" class="grid"><div class="c4 field"><label>Current Password</label><input id="pwCur" type="password" required></div><div class="c4 field"><label>New Password</label><input id="pwNew" type="password" required></div><div class="c4 field"><label>Confirm Password</label><input id="pwOk" type="password" required></div><div class="c4 field"><button class="btn" type="submit">Change Password</button></div></form></div>
     </section>
 
     <section class="page" id="p-settings">
-      <div class="card c6">
-        <h2>åŽ†å²ä¿ç•™ç­–ç•¥</h2>
-        <form id="fHistory">
-          <div class="field"><label>æœ€å¤§ä¿ç•™æ•°é‡ï¼ˆ-1 ä¸ºæ°¸ä¹…ï¼‰</label><input id="stKeep" type="number" value="{{ max_history }}" min="-1"></div>
-          <div class="row"><button class="btn sec" type="submit">ä¿å­˜ç­–ç•¥</button></div>
-        </form>
-      </div>
+      <div class="card c6"><h2>History Retention</h2><form id="fHistory"><div class="field"><label>Max backups (-1 means unlimited)</label><input id="stKeep" type="number" value="{{ max_history }}" min="-1"></div><div class="row"><button class="btn sec" type="submit">Save Policy</button></div></form></div>
     </section>
   </main>
 </div>
 <div class="toast" id="toast"></div>
+
 <script>
 (() => {
   const MUST_CHANGE_PASSWORD = {{ "true" if must_change_password else "false" }};
-  const state = {
-    models: [],
-    agents: [],
-    backups: [],
-    selectedAgentId: "",
-    selectedAgent: null,
-    selectedModelId: "",
-    selectedChatId: "",
-    manualState: "",
-    nextVersion: "{{ suggested_version }}",
-  };
-
-  const versionInputIds = ["caVer", "bVer", "amVer", "emVer", "acVer", "ecVer", "bkVer"];
-
+  const S = { models: [], agents: [], backups: [], selectedAgentId: "", selectedAgent: null, selectedModelId: "", selectedChatId: "", manualState: "", nextVersion: "{{ suggested_version }}" };
+  const VID = ["caVer","bVer","amVer","emVer","acVer","ecVer","bkVer"];
   const el = (id) => document.getElementById(id);
-  const nodes = {
-    toast: el("toast"),
-    navs: [...document.querySelectorAll(".nav")],
-    pages: [...document.querySelectorAll(".page")],
-    tabs: [...document.querySelectorAll(".tab")],
-    tabPanels: [...document.querySelectorAll(".tabp")],
-  };
-
-  function toast(message, isError = false) {
-    nodes.toast.textContent = message;
-    nodes.toast.classList.add("show");
-    nodes.toast.classList.toggle("err", isError);
-    clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => nodes.toast.classList.remove("show"), 2600);
-  }
-
-  async function api(url, method = "GET", body = null) {
-    const options = {
-      method,
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-    };
-    if (body !== null) {
-      options.body = JSON.stringify(body);
-    }
-    const response = await fetch(url, options);
-    if (response.status === 401) {
-      location.href = "/login";
-      throw new Error("登录状态已失效");
-    }
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(data.error || data.detail || "请求失败");
-    }
-    return data;
-  }
-
-  function esc(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-  }
-
-  function setPage(page) {
-    nodes.navs.forEach((node) => node.classList.toggle("active", node.dataset.p === page));
-    nodes.pages.forEach((node) => node.classList.toggle("active", node.id === `p-${page}`));
-  }
-
-  function setTab(tab) {
-    nodes.tabs.forEach((node) => node.classList.toggle("active", node.dataset.t === tab));
-    nodes.tabPanels.forEach((node) => node.classList.toggle("active", node.id === `tp-${tab}`));
-  }
-
-  function bindNavAndTabs() {
-    nodes.navs.forEach((node) => {
-      node.onclick = () => setPage(node.dataset.p);
-    });
-    nodes.tabs.forEach((node) => {
-      node.onclick = () => setTab(node.dataset.t);
-    });
-  }
-
-  function modelCatalogMap() {
-    const map = new Map();
-    state.models.forEach((item) => {
-      const key = String(item.model || "").trim();
-      if (!key) {
-        return;
-      }
-      if (!map.has(key)) {
-        map.set(key, item);
-      }
-    });
-    return map;
-  }
-
-  function renderModelOptions(withCustom = true) {
-    const groups = {};
-    state.models.forEach((item) => {
-      const provider = item.provider || "Custom";
-      if (!groups[provider]) {
-        groups[provider] = [];
-      }
-      groups[provider].push(item);
-    });
-
-    let html = "";
-    Object.keys(groups)
-      .sort((a, b) => a.localeCompare(b))
-      .forEach((provider) => {
-        html += `<optgroup label="${esc(provider)}">`;
-        groups[provider].forEach((item) => {
-          html += `<option value="${esc(item.model)}" data-provider="${esc(provider)}">${esc(item.label)} (${esc(item.model)})</option>`;
-        });
-        html += "</optgroup>";
-      });
-    if (withCustom) {
-      html += '<option value="__custom__">自定义模型...</option>';
-    }
-    return html;
-  }
-
-  function bindCustomModelSelect(selectId, customWrapId, providerInputId = "") {
-    const select = el(selectId);
-    const wrap = el(customWrapId);
-    const providerInput = providerInputId ? el(providerInputId) : null;
-    const update = () => {
-      wrap.style.display = select.value === "__custom__" ? "block" : "none";
-      if (providerInput && select.value !== "__custom__") {
-        const option = select.options[select.selectedIndex];
-        providerInput.value = option?.dataset?.provider || "";
-      }
-    };
-    select.onchange = update;
-    update();
-  }
-
-  function selectedModel(selectId, customId) {
-    const select = el(selectId);
-    const custom = el(customId);
-    const raw = (select.value || "").trim();
-    if (raw === "__custom__") {
-      return {
-        model: (custom.value || "").trim(),
-        provider: "Custom",
-      };
-    }
-    const option = select.options[select.selectedIndex];
-    return {
-      model: raw,
-      provider: option?.dataset?.provider || "Custom",
-    };
-  }
-
-  function fillSelect(selectElement, rows, keyName, textBuilder) {
-    selectElement.innerHTML = rows
-      .map((row) => `<option value="${esc(row[keyName])}">${esc(textBuilder(row))}</option>`)
-      .join("");
-  }
-
-  function renderAgents() {
-    const tbody = el("tbAgents");
-    if (!state.agents.length) {
-      tbody.innerHTML = '<tr><td colspan="6">暂无 Agent</td></tr>';
-      return;
-    }
-    tbody.innerHTML = state.agents
-      .map((agent) => {
-        const active = state.selectedAgentId === agent.id ? ' style="background:#3d79df22"' : "";
-        return `<tr data-id="${esc(agent.id)}"${active}>
-          <td class="mono">${esc(agent.id)}</td>
-          <td class="mono">${esc(agent.model || "-")}</td>
-          <td>${esc(agent.chat_entry || "-")}</td>
-          <td>${esc(agent.models_count || 0)}</td>
-          <td>${esc(agent.chats_count || 0)}</td>
-          <td class="mono">${esc(agent.updated_at || "-")}</td>
-        </tr>`;
-      })
-      .join("");
-    tbody.querySelectorAll("tr[data-id]").forEach((row) => {
-      row.onclick = () => pickAgent(row.dataset.id || "");
-    });
-  }
-
-  function renderBackups() {
-    const tbody = el("tbBackups");
-    if (!state.backups.length) {
-      tbody.innerHTML = '<tr><td colspan="5">暂无历史版本</td></tr>';
-      return;
-    }
-    tbody.innerHTML = state.backups
-      .map((item) => {
-        const note = item.exists === false ? `${item.note || ""} (目录缺失)` : item.note || "-";
-        return `<tr>
-          <td class="mono">${esc(item.version)}</td>
-          <td class="mono">${esc(item.created_at || "-")}</td>
-          <td>${esc(item.created_by || "-")}</td>
-          <td>${esc(note)}</td>
-          <td><button class="btn danger rb" data-v="${esc(item.version)}" type="button">回滚</button></td>
-        </tr>`;
-      })
-      .join("");
-    tbody.querySelectorAll(".rb").forEach((btn) => {
-      btn.onclick = async () => {
-        const version = btn.dataset.v || "";
-        if (!version) {
-          return;
-        }
-        if (!confirm(`确认回滚到 ${version} ?`)) {
-          return;
-        }
-        try {
-          const result = await api("/api/rollback", "POST", { version });
-          toast(result.message || "回滚完成");
-          await loadState();
-        } catch (error) {
-          toast(error.message, true);
-        }
-      };
-    });
-  }
-
-  function clearAgentDetail() {
-    el("dAgent").textContent = "未选择";
-    el("tbModels").innerHTML = '<tr><td colspan="4">暂无模型</td></tr>';
-    el("tbChats").innerHTML = '<tr><td colspan="4">暂无聊天</td></tr>';
-    el("bDefModel").innerHTML = "";
-    el("bDefChat").innerHTML = "";
-    el("acModel").innerHTML = "";
-    el("ecModel").innerHTML = "";
-    el("bToken").value = "";
-    el("bAuth").value = "token";
-  }
-
-  function renderAgentDetail() {
-    const agent = state.selectedAgent;
-    if (!agent) {
-      clearAgentDetail();
-      return;
-    }
-
-    el("dAgent").textContent = state.selectedAgentId || "未选择";
-    el("bAuth").value = agent.auth_type || "token";
-    el("bToken").value = agent.token_or_pass || "";
-
-    fillSelect(el("bDefModel"), agent.models || [], "id", (m) => `${m.name} (${m.model})`);
-    fillSelect(el("bDefChat"), agent.chats || [], "id", (c) => `${c.name} [${c.entry}]`);
-    fillSelect(el("acModel"), agent.models || [], "id", (m) => `${m.name} (${m.model})`);
-    fillSelect(el("ecModel"), agent.models || [], "id", (m) => `${m.name} (${m.model})`);
-
-    el("bDefModel").value = agent.default_model_id || "";
-    el("bDefChat").value = agent.default_chat_id || "";
-
-    const modelTbody = el("tbModels");
-    modelTbody.innerHTML =
-      (agent.models || [])
-        .map((modelItem) => {
-          const active = state.selectedModelId === modelItem.id ? ' style="background:#3d79df22"' : "";
-          const mark = modelItem.id === agent.default_model_id ? '<span class="mono">[默认]</span> ' : "";
-          return `<tr${active}>
-            <td>${mark}${esc(modelItem.name || "-")}</td>
-            <td class="mono">${esc(modelItem.model || "-")}</td>
-            <td>${esc(modelItem.provider || "-")}</td>
-            <td><button class="btn sec em" data-id="${esc(modelItem.id)}" type="button">编辑</button></td>
-          </tr>`;
-        })
-        .join("") || '<tr><td colspan="4">暂无模型</td></tr>';
-    modelTbody.querySelectorAll(".em").forEach((btn) => {
-      btn.onclick = () => {
-        state.selectedModelId = btn.dataset.id || "";
-        const selected = (agent.models || []).find((item) => item.id === state.selectedModelId);
-        if (!selected) {
-          return;
-        }
-        el("emName").value = selected.name || "";
-        el("emModel").value = selected.model || "";
-        el("emProvider").value = selected.provider || "";
-        el("emDefault").checked = selected.id === agent.default_model_id;
-        el("emVer").value = state.nextVersion;
-        renderAgentDetail();
-      };
-    });
-
-    const chatTbody = el("tbChats");
-    chatTbody.innerHTML =
-      (agent.chats || [])
-        .map((chatItem) => {
-          const active = state.selectedChatId === chatItem.id ? ' style="background:#3d79df22"' : "";
-          const mark = chatItem.id === agent.default_chat_id ? '<span class="mono">[默认]</span> ' : "";
-          return `<tr${active}>
-            <td>${mark}${esc(chatItem.name || "-")}</td>
-            <td class="mono">${esc(chatItem.entry || "-")}</td>
-            <td class="mono">${esc(chatItem.model_id || "-")}</td>
-            <td><button class="btn sec ec" data-id="${esc(chatItem.id)}" type="button">编辑</button></td>
-          </tr>`;
-        })
-        .join("") || '<tr><td colspan="4">暂无聊天</td></tr>';
-    chatTbody.querySelectorAll(".ec").forEach((btn) => {
-      btn.onclick = () => {
-        state.selectedChatId = btn.dataset.id || "";
-        const selected = (agent.chats || []).find((item) => item.id === state.selectedChatId);
-        if (!selected) {
-          return;
-        }
-        el("ecName").value = selected.name || "";
-        el("ecEntry").value = selected.entry || "";
-        el("ecModel").value = selected.model_id || "";
-        el("ecDefault").checked = selected.id === agent.default_chat_id;
-        el("ecVer").value = state.nextVersion;
-        renderAgentDetail();
-      };
-    });
-  }
-
-  async function pickAgent(agentId) {
-    if (!agentId) {
-      return;
-    }
-    state.selectedAgentId = agentId;
-    state.selectedModelId = "";
-    state.selectedChatId = "";
-    const result = await api(`/api/agents/${encodeURIComponent(agentId)}`);
-    state.selectedAgent = result.agent || null;
-    renderAgents();
-    renderAgentDetail();
-  }
-
-  async function loadState() {
-    const result = await api("/api/state");
-    state.models = result.model_catalog || [];
-    state.agents = result.agents || [];
-    state.backups = result.backups || [];
-    state.nextVersion = result.suggested_version || "v1.0.0";
-
-    el("kAgents").textContent = String(state.agents.length);
-    el("kBackups").textContent = String(state.backups.length);
-    el("kModels").textContent = String(state.models.length);
-    el("kKeep").textContent = String(result.max_history);
-    el("nextVer").textContent = state.nextVersion;
-    el("stKeep").value = String(result.max_history);
-
-    el("caModel").innerHTML = renderModelOptions(true);
-    el("amModel").innerHTML = renderModelOptions(true);
-    bindCustomModelSelect("caModel", "caCustomWrap");
-    bindCustomModelSelect("amModel", "amCustomWrap", "amProvider");
-
-    versionInputIds.forEach((id) => {
-      const input = el(id);
-      if (input) {
-        input.value = state.nextVersion;
-      }
-    });
-
-    renderAgents();
-    renderBackups();
-    if (state.selectedAgentId) {
-      const stillExists = state.agents.some((item) => item.id === state.selectedAgentId);
-      if (stillExists) {
-        await pickAgent(state.selectedAgentId);
-      } else {
-        state.selectedAgentId = "";
-        state.selectedAgent = null;
-        renderAgentDetail();
-      }
-    } else {
-      renderAgentDetail();
-    }
-  }
-
-  function bindEvents() {
-    el("logoutBtn").onclick = async () => {
-      try {
-        await api("/api/logout", "POST", {});
-      } finally {
-        location.href = "/login";
-      }
-    };
-
-    el("refreshBtn").onclick = async () => {
-      try {
-        await loadState();
-        toast("数据已刷新");
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fCreateAgent").onsubmit = async (event) => {
-      event.preventDefault();
-      try {
-        const selected = selectedModel("caModel", "caCustom");
-        if (!selected.model) {
-          throw new Error("请选择或填写模型");
-        }
-        const catalog = modelCatalogMap().get(selected.model);
-        const payload = {
-          id: el("caId").value.trim(),
-          model: selected.model,
-          model_name: catalog?.label || selected.model,
-          model_provider: catalog?.provider || selected.provider || "Custom",
-          chat_entry: el("caChat").value.trim(),
-          chat_name: el("caChatName").value.trim(),
-          auth_type: el("caAuth").value,
-          token_or_pass: el("caToken").value.trim(),
-          version: el("caVer").value.trim(),
-        };
-        const result = await api("/api/agents", "POST", payload);
-        toast(result.message || "创建成功");
-        await loadState();
-        await pickAgent(payload.id);
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fBase").onsubmit = async (event) => {
-      event.preventDefault();
-      if (!state.selectedAgentId) {
-        toast("请先选择 Agent", true);
-        return;
-      }
-      try {
-        const payload = {
-          auth_type: el("bAuth").value,
-          token_or_pass: el("bToken").value.trim(),
-          default_model_id: el("bDefModel").value,
-          default_chat_id: el("bDefChat").value,
-          version: el("bVer").value.trim(),
-        };
-        const result = await api(`/api/agents/${encodeURIComponent(state.selectedAgentId)}`, "PATCH", payload);
-        toast(result.message || "已更新");
-        await loadState();
-        await pickAgent(state.selectedAgentId);
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fAddModel").onsubmit = async (event) => {
-      event.preventDefault();
-      if (!state.selectedAgentId) {
-        toast("请先选择 Agent", true);
-        return;
-      }
-      try {
-        const selected = selectedModel("amModel", "amCustom");
-        if (!selected.model) {
-          throw new Error("请选择或填写模型");
-        }
-        const catalog = modelCatalogMap().get(selected.model);
-        const payload = {
-          model: selected.model,
-          name: el("amName").value.trim() || (catalog?.label || selected.model),
-          provider: el("amProvider").value.trim() || catalog?.provider || selected.provider || "Custom",
-          set_default: el("amDefault").checked,
-          version: el("amVer").value.trim(),
-        };
-        const result = await api(`/api/agents/${encodeURIComponent(state.selectedAgentId)}/models`, "POST", payload);
-        toast(result.message || "模型已新增");
-        event.target.reset();
-        bindCustomModelSelect("amModel", "amCustomWrap", "amProvider");
-        await loadState();
-        await pickAgent(state.selectedAgentId);
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fEditModel").onsubmit = async (event) => {
-      event.preventDefault();
-      if (!state.selectedAgentId || !state.selectedModelId) {
-        toast("请先选择模型", true);
-        return;
-      }
-      try {
-        const payload = {
-          name: el("emName").value.trim(),
-          model: el("emModel").value.trim(),
-          provider: el("emProvider").value.trim(),
-          set_default: el("emDefault").checked,
-          version: el("emVer").value.trim(),
-        };
-        const result = await api(
-          `/api/agents/${encodeURIComponent(state.selectedAgentId)}/models/${encodeURIComponent(state.selectedModelId)}`,
-          "PATCH",
-          payload
-        );
-        toast(result.message || "模型已更新");
-        await loadState();
-        await pickAgent(state.selectedAgentId);
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fAddChat").onsubmit = async (event) => {
-      event.preventDefault();
-      if (!state.selectedAgentId) {
-        toast("请先选择 Agent", true);
-        return;
-      }
-      try {
-        const payload = {
-          name: el("acName").value.trim(),
-          entry: el("acEntry").value.trim(),
-          model_id: el("acModel").value,
-          set_default: el("acDefault").checked,
-          version: el("acVer").value.trim(),
-        };
-        const result = await api(`/api/agents/${encodeURIComponent(state.selectedAgentId)}/chats`, "POST", payload);
-        toast(result.message || "聊天已新增");
-        event.target.reset();
-        await loadState();
-        await pickAgent(state.selectedAgentId);
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fEditChat").onsubmit = async (event) => {
-      event.preventDefault();
-      if (!state.selectedAgentId || !state.selectedChatId) {
-        toast("请先选择聊天", true);
-        return;
-      }
-      try {
-        const payload = {
-          name: el("ecName").value.trim(),
-          entry: el("ecEntry").value.trim(),
-          model_id: el("ecModel").value,
-          set_default: el("ecDefault").checked,
-          version: el("ecVer").value.trim(),
-        };
-        const result = await api(
-          `/api/agents/${encodeURIComponent(state.selectedAgentId)}/chats/${encodeURIComponent(state.selectedChatId)}`,
-          "PATCH",
-          payload
-        );
-        toast(result.message || "聊天已更新");
-        await loadState();
-        await pickAgent(state.selectedAgentId);
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fBackup").onsubmit = async (event) => {
-      event.preventDefault();
-      try {
-        const payload = {
-          version: el("bkVer").value.trim(),
-          note: el("bkNote").value.trim(),
-        };
-        const result = await api("/api/backups", "POST", payload);
-        toast(result.message || "备份已创建");
-        await loadState();
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fCapture").onsubmit = async (event) => {
-      event.preventDefault();
-      try {
-        const payload = {
-          login_url: el("auUrl").value.trim(),
-          username: el("auUser").value.trim(),
-          password: el("auPass").value,
-        };
-        const result = await api("/api/capture-auth", "POST", payload);
-        if (result.status === "success" && result.token) {
-          el("auToken").value = result.token;
-          toast("已捕获 token");
-          return;
-        }
-        if (result.status === "pending_external_auth" && result.manual) {
-          state.manualState = result.manual.state || "";
-          el("manUrl").value = result.manual.auth_url || "";
-          el("manState").value = result.manual.state || "";
-          el("manBox").hidden = false;
-          toast(result.message || "已生成鉴权 URL");
-          return;
-        }
-        toast(result.message || "捕获失败", true);
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("genAuth").onclick = async () => {
-      const loginUrl = el("auUrl").value.trim();
-      if (!loginUrl) {
-        toast("请先填写登录 URL", true);
-        return;
-      }
-      try {
-        const result = await api("/api/capture-auth/url-start", "POST", { login_url: loginUrl });
-        if (result.manual) {
-          state.manualState = result.manual.state || "";
-          el("manUrl").value = result.manual.auth_url || "";
-          el("manState").value = result.manual.state || "";
-          el("manBox").hidden = false;
-          toast("鉴权 URL 已生成");
-        }
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("copyUrl").onclick = async () => {
-      const value = el("manUrl").value.trim();
-      if (!value) {
-        toast("没有可复制的 URL", true);
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(value);
-        toast("已复制 URL");
-      } catch (_) {
-        toast("复制失败，请手动复制", true);
-      }
-    };
-
-    el("checkAuth").onclick = async () => {
-      if (!state.manualState) {
-        toast("没有可检查的会话", true);
-        return;
-      }
-      try {
-        const result = await api(`/api/capture-auth/url-result?state=${encodeURIComponent(state.manualState)}`);
-        if (result.status === "success" && result.token) {
-          el("auToken").value = result.token;
-          toast("已捕获 token");
-          return;
-        }
-        toast(result.message || "等待回调中");
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fPwd").onsubmit = async (event) => {
-      event.preventDefault();
-      try {
-        await api("/api/change-password", "POST", {
-          current_password: el("pwCur").value,
-          new_password: el("pwNew").value,
-          confirm_password: el("pwOk").value,
-        });
-        event.target.reset();
-        toast("密码已修改");
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-
-    el("fHistory").onsubmit = async (event) => {
-      event.preventDefault();
-      try {
-        await api("/api/settings/history", "POST", {
-          max_history: Number(el("stKeep").value),
-        });
-        toast("策略已保存");
-        await loadState();
-      } catch (error) {
-        toast(error.message, true);
-      }
-    };
-  }
-
-  async function init() {
-    bindNavAndTabs();
-    bindEvents();
-    await loadState();
-    if (MUST_CHANGE_PASSWORD) {
-      setPage("security");
-      toast("当前仍是初始密码，请先修改账号密码");
-    }
-  }
-
-  init().catch((error) => toast(error.message || "初始化失败", true));
+  const toast = el("toast");
+  const nav = [...document.querySelectorAll(".nav")];
+  const pages = [...document.querySelectorAll(".page")];
+  const tabs = [...document.querySelectorAll(".tab")];
+  const tabp = [...document.querySelectorAll(".tabp")];
+  const note = (m,e=false) => { toast.textContent=m; toast.classList.add("show"); toast.classList.toggle("err",e); clearTimeout(note.t); note.t=setTimeout(()=>toast.classList.remove("show"),2600); };
+  const esc = (v)=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#39;");
+  const setPage = (p)=>{ nav.forEach(n=>n.classList.toggle("active",n.dataset.p===p)); pages.forEach(x=>x.classList.toggle("active",x.id===`p-${p}`)); };
+  const setTab = (t)=>{ tabs.forEach(x=>x.classList.toggle("active",x.dataset.t===t)); tabp.forEach(x=>x.classList.toggle("active",x.id===`tp-${t}`)); };
+  const api = async (u,m="GET",b=null)=>{ const o={method:m,credentials:"same-origin",headers:{"Content-Type":"application/json"}}; if(b!==null)o.body=JSON.stringify(b); const r=await fetch(u,o); if(r.status===401){location.href="/login"; throw new Error("Session expired");} const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.error||d.detail||"Request failed"); return d; };
+  const fill = (elx,rows,key,fmt)=>{ elx.innerHTML=rows.map(r=>`<option value="${esc(r[key])}">${esc(fmt(r))}</option>`).join(""); };
+  const cmap = ()=>{ const m=new Map(); S.models.forEach(x=>{const k=String(x.model||"").trim(); if(k && !m.has(k)) m.set(k,x);}); return m; };
+  const mopts = ()=>{ const g={}; S.models.forEach(x=>((g[x.provider||"Custom"]??=[]).push(x))); let h=""; Object.keys(g).sort().forEach(p=>{ h+=`<optgroup label="${esc(p)}">`; g[p].forEach(x=>h+=`<option value="${esc(x.model)}" data-provider="${esc(p)}">${esc(x.label)} (${esc(x.model)})</option>`); h+="</optgroup>"; }); return h+'<option value="__custom__">Custom model...</option>'; };
+  const bindCustom = (sid,wid,pid="")=>{ const s=el(sid),w=el(wid),p=pid?el(pid):null; const f=()=>{ w.style.display=s.value==="__custom__"?"block":"none"; if(p && s.value!=="__custom__"){ const opt=s.options[s.selectedIndex]; p.value=opt?.dataset?.provider||""; } }; s.onchange=f; f(); };
+  const mval = (sid,cid)=>{ const s=el(sid),raw=(s.value||"").trim(); if(raw==="__custom__") return {model:(el(cid).value||"").trim(),provider:"Custom"}; return {model:raw,provider:s.options[s.selectedIndex]?.dataset?.provider||"Custom"}; };
+  const clearDetail = ()=>{ el("dAgent").textContent="None selected"; el("tbModels").innerHTML='<tr><td colspan="4">No models</td></tr>'; el("tbChats").innerHTML='<tr><td colspan="4">No chats</td></tr>'; ["bDefModel","bDefChat","acModel","ecModel"].forEach(id=>el(id).innerHTML=""); el("bAuth").value="token"; el("bToken").value=""; };
+  const renderAgents = ()=>{ const t=el("tbAgents"); if(!S.agents.length){ t.innerHTML='<tr><td colspan="6">No agents</td></tr>'; return; } t.innerHTML=S.agents.map(a=>`<tr data-id="${esc(a.id)}" ${S.selectedAgentId===a.id?'style="background:#3d79df22"':''}><td class="mono">${esc(a.id)}</td><td class="mono">${esc(a.model||"-")}</td><td>${esc(a.chat_entry||"-")}</td><td>${esc(a.models_count||0)}</td><td>${esc(a.chats_count||0)}</td><td class="mono">${esc(a.updated_at||"-")}</td></tr>`).join(""); t.querySelectorAll("tr[data-id]").forEach(r=>r.onclick=()=>pickAgent(r.dataset.id||"")); };
+  const renderBackups = ()=>{ const t=el("tbBackups"); if(!S.backups.length){ t.innerHTML='<tr><td colspan="5">No versions</td></tr>'; return; } t.innerHTML=S.backups.map(b=>`<tr><td class="mono">${esc(b.version)}</td><td class="mono">${esc(b.created_at||"-")}</td><td>${esc(b.created_by||"-")}</td><td>${esc(b.exists===false?`${b.note||""} (missing folder)`:(b.note||"-"))}</td><td><button class="btn danger rb" data-v="${esc(b.version)}" type="button">Rollback</button></td></tr>`).join(""); t.querySelectorAll(".rb").forEach(b=>b.onclick=async()=>{const v=b.dataset.v||""; if(!v) return; if(!confirm(`Rollback to ${v}?`)) return; try{const r=await api("/api/rollback","POST",{version:v}); note(r.message||"Rollback done"); await load();}catch(e){note(e.message,true)}}); };
+  const renderDetail = ()=>{ const a=S.selectedAgent; if(!a){ clearDetail(); return; } el("dAgent").textContent=S.selectedAgentId||"None selected"; el("bAuth").value=a.auth_type||"token"; el("bToken").value=a.token_or_pass||""; fill(el("bDefModel"),a.models||[],"id",m=>`${m.name} (${m.model})`); fill(el("bDefChat"),a.chats||[],"id",c=>`${c.name} [${c.entry}]`); fill(el("acModel"),a.models||[],"id",m=>`${m.name} (${m.model})`); fill(el("ecModel"),a.models||[],"id",m=>`${m.name} (${m.model})`); el("bDefModel").value=a.default_model_id||""; el("bDefChat").value=a.default_chat_id||""; const tm=el("tbModels"); tm.innerHTML=(a.models||[]).map(m=>`<tr ${S.selectedModelId===m.id?'style="background:#3d79df22"':''}><td>${m.id===a.default_model_id?'<span class="mono">[Default]</span> ':''}${esc(m.name||"-")}</td><td class="mono">${esc(m.model||"-")}</td><td>${esc(m.provider||"-")}</td><td><button class="btn sec em" data-id="${esc(m.id)}" type="button">Edit</button></td></tr>`).join("")||'<tr><td colspan="4">No models</td></tr>'; tm.querySelectorAll(".em").forEach(b=>b.onclick=()=>{S.selectedModelId=b.dataset.id||""; const m=(a.models||[]).find(x=>x.id===S.selectedModelId); if(!m)return; el("emName").value=m.name||""; el("emModel").value=m.model||""; el("emProvider").value=m.provider||""; el("emDefault").checked=(m.id===a.default_model_id); el("emVer").value=S.nextVersion; renderDetail();}); const tc=el("tbChats"); tc.innerHTML=(a.chats||[]).map(c=>`<tr ${S.selectedChatId===c.id?'style="background:#3d79df22"':''}><td>${c.id===a.default_chat_id?'<span class="mono">[Default]</span> ':''}${esc(c.name||"-")}</td><td class="mono">${esc(c.entry||"-")}</td><td class="mono">${esc(c.model_id||"-")}</td><td><button class="btn sec ec" data-id="${esc(c.id)}" type="button">Edit</button></td></tr>`).join("")||'<tr><td colspan="4">No chats</td></tr>'; tc.querySelectorAll(".ec").forEach(b=>b.onclick=()=>{S.selectedChatId=b.dataset.id||""; const c=(a.chats||[]).find(x=>x.id===S.selectedChatId); if(!c)return; el("ecName").value=c.name||""; el("ecEntry").value=c.entry||""; el("ecModel").value=c.model_id||""; el("ecDefault").checked=(c.id===a.default_chat_id); el("ecVer").value=S.nextVersion; renderDetail();}); };
+  const pickAgent = async(id)=>{ if(!id) return; S.selectedAgentId=id; S.selectedModelId=""; S.selectedChatId=""; const d=await api(`/api/agents/${encodeURIComponent(id)}`); S.selectedAgent=d.agent||null; renderAgents(); renderDetail(); };
+  const load = async()=>{ const d=await api("/api/state"); S.models=d.model_catalog||[]; S.agents=d.agents||[]; S.backups=d.backups||[]; S.nextVersion=d.suggested_version||"v1.0.0"; el("kAgents").textContent=String(S.agents.length); el("kBackups").textContent=String(S.backups.length); el("kModels").textContent=String(S.models.length); el("kKeep").textContent=String(d.max_history); el("nextVer").textContent=S.nextVersion; el("stKeep").value=String(d.max_history); el("caModel").innerHTML=mopts(); el("amModel").innerHTML=mopts(); bindCustom("caModel","caCustomWrap"); bindCustom("amModel","amCustomWrap","amProvider"); VID.forEach(id=>{const x=el(id); if(x)x.value=S.nextVersion;}); renderAgents(); renderBackups(); if(S.selectedAgentId){ if(S.agents.some(x=>x.id===S.selectedAgentId)) await pickAgent(S.selectedAgentId); else {S.selectedAgentId=""; S.selectedAgent=null; renderDetail();} } else renderDetail(); };
+  nav.forEach(n=>n.onclick=()=>setPage(n.dataset.p)); tabs.forEach(t=>t.onclick=()=>setTab(t.dataset.t));
+  el("logoutBtn").onclick=async()=>{ try{await api("/api/logout","POST",{});}finally{location.href="/login";} };
+  el("refreshBtn").onclick=async()=>{ try{await load(); note("Data refreshed");}catch(e){note(e.message,true);} };
+  el("fCreateAgent").onsubmit=async(e)=>{ e.preventDefault(); try{const m=mval("caModel","caCustom"); if(!m.model) throw new Error("Please choose or input model"); const c=cmap().get(m.model); const p={id:el("caId").value.trim(),model:m.model,model_name:c?.label||m.model,model_provider:c?.provider||m.provider||"Custom",chat_entry:el("caChat").value.trim(),chat_name:el("caChatName").value.trim(),auth_type:el("caAuth").value,token_or_pass:el("caToken").value.trim(),version:el("caVer").value.trim()}; const r=await api("/api/agents","POST",p); note(r.message||"Created"); await load(); await pickAgent(p.id);}catch(err){note(err.message,true);} };
+  el("fBase").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId) return note("Please select an agent",true); try{const p={auth_type:el("bAuth").value,token_or_pass:el("bToken").value.trim(),default_model_id:el("bDefModel").value,default_chat_id:el("bDefChat").value,version:el("bVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}`,"PATCH",p); note(r.message||"Updated"); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
+  el("fAddModel").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId) return note("Please select an agent",true); try{const m=mval("amModel","amCustom"); if(!m.model) throw new Error("Please choose or input model"); const c=cmap().get(m.model); const p={model:m.model,name:el("amName").value.trim()||(c?.label||m.model),provider:el("amProvider").value.trim()||c?.provider||m.provider||"Custom",set_default:el("amDefault").checked,version:el("amVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}/models`,"POST",p); note(r.message||"Model added"); e.target.reset(); bindCustom("amModel","amCustomWrap","amProvider"); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
+  el("fEditModel").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId||!S.selectedModelId) return note("Please select a model",true); try{const p={name:el("emName").value.trim(),model:el("emModel").value.trim(),provider:el("emProvider").value.trim(),set_default:el("emDefault").checked,version:el("emVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}/models/${encodeURIComponent(S.selectedModelId)}`,"PATCH",p); note(r.message||"Model updated"); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
+  el("fAddChat").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId) return note("Please select an agent",true); try{const p={name:el("acName").value.trim(),entry:el("acEntry").value.trim(),model_id:el("acModel").value,set_default:el("acDefault").checked,version:el("acVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}/chats`,"POST",p); note(r.message||"Chat added"); e.target.reset(); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
+  el("fEditChat").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId||!S.selectedChatId) return note("Please select a chat",true); try{const p={name:el("ecName").value.trim(),entry:el("ecEntry").value.trim(),model_id:el("ecModel").value,set_default:el("ecDefault").checked,version:el("ecVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}/chats/${encodeURIComponent(S.selectedChatId)}`,"PATCH",p); note(r.message||"Chat updated"); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
+  el("fBackup").onsubmit=async(e)=>{ e.preventDefault(); try{const p={version:el("bkVer").value.trim(),note:el("bkNote").value.trim()}; const r=await api("/api/backups","POST",p); note(r.message||"Backup created"); await load();}catch(err){note(err.message,true);} };
+  el("fCapture").onsubmit=async(e)=>{ e.preventDefault(); try{const p={login_url:el("auUrl").value.trim(),username:el("auUser").value.trim(),password:el("auPass").value}; const r=await api("/api/capture-auth","POST",p); if(r.status==="success"&&r.token){ el("auToken").value=r.token; return note("Token captured"); } if(r.status==="pending_external_auth"&&r.manual){ S.manualState=r.manual.state||""; el("manUrl").value=r.manual.auth_url||""; el("manState").value=r.manual.state||""; el("manBox").hidden=false; return note(r.message||"Auth URL generated"); } note(r.message||"Capture failed",true);}catch(err){note(err.message,true);} };
+  el("genAuth").onclick=async()=>{ const u=el("auUrl").value.trim(); if(!u) return note("Please input login URL",true); try{const r=await api("/api/capture-auth/url-start","POST",{login_url:u}); if(r.manual){ S.manualState=r.manual.state||""; el("manUrl").value=r.manual.auth_url||""; el("manState").value=r.manual.state||""; el("manBox").hidden=false; note("Auth URL generated"); }}catch(err){note(err.message,true);} };
+  el("copyUrl").onclick=async()=>{ const v=el("manUrl").value.trim(); if(!v) return note("No URL to copy",true); try{await navigator.clipboard.writeText(v); note("URL copied");}catch(_){note("Copy failed. Please copy manually",true);} };
+  el("checkAuth").onclick=async()=>{ if(!S.manualState) return note("No auth session",true); try{const r=await api(`/api/capture-auth/url-result?state=${encodeURIComponent(S.manualState)}`); if(r.status==="success"&&r.token){ el("auToken").value=r.token; return note("Token captured"); } note(r.message||"Waiting callback");}catch(err){note(err.message,true);} };
+  el("fPwd").onsubmit=async(e)=>{ e.preventDefault(); try{await api("/api/change-password","POST",{current_password:el("pwCur").value,new_password:el("pwNew").value,confirm_password:el("pwOk").value}); e.target.reset(); note("Password updated");}catch(err){note(err.message,true);} };
+  el("fHistory").onsubmit=async(e)=>{ e.preventDefault(); try{await api("/api/settings/history","POST",{max_history:Number(el("stKeep").value)}); note("Policy saved"); await load();}catch(err){note(err.message,true);} };
+  load().then(()=>{ if(MUST_CHANGE_PASSWORD){ setPage("security"); note("Default password in use. Please change it now."); }}).catch(err=>note(err.message||"Initialization failed",true));
 })();
 </script>
 </body>
 </html>
-

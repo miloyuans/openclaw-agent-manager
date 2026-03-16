@@ -392,7 +392,10 @@ def write_json_file(path: Path, data: Any) -> None:
 
 def render_template(name: str, **context: Any) -> HTMLResponse:
     tpl = template_env.get_template(name)
-    return HTMLResponse(tpl.render(**context))
+    return HTMLResponse(
+        tpl.render(**context),
+        media_type="text/html; charset=utf-8",
+    )
 
 
 def normalize_max_history(value: Any) -> int:
