@@ -6,222 +6,354 @@
   <title>OpenClaw Agent Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#081424;--panel:#12233dcc;--line:#7ab0ff55;--txt:#eef6ff;--muted:#a4b8d6;--err:#ff7f9b}
+    :root{--bg:#071224;--panel:#102644cc;--line:#7cb3ff66;--txt:#e9f4ff;--muted:#9fb9db;--acc:#4adfff;--acc2:#5a90ff;--bad:#ff8ea9;--shadow:0 20px 44px rgba(0,0,0,.42)}
     *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;font-family:Manrope,sans-serif;color:var(--txt);background:radial-gradient(circle at 10% 10%,#4779ff44,transparent 35%),radial-gradient(circle at 85% 12%,#46d9ff33,transparent 35%),var(--bg)}
-    .app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
-    .side{padding:12px;border-right:1px solid var(--line);background:#0a1830d9;display:grid;gap:8px;align-content:start}
-    .brand{padding:10px;border:1px solid var(--line);border-radius:10px;font-weight:800}
-    .nav{padding:9px 10px;border:1px solid transparent;border-radius:10px;background:#4f7cc223;color:#d9e8ff;cursor:pointer;text-align:left;font-weight:700}
-    .nav.active{border-color:var(--line);background:#46d9ff22}
-    .main{padding:12px;display:grid;gap:10px}
-    .top{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted)}
-    .page{display:none;gap:10px}
-    .page.active{display:grid}
+    html,body{margin:0;min-height:100%;font-family:Manrope,sans-serif;color:var(--txt);background:radial-gradient(circle at 10% 10%,#4f83ff4d,transparent 36%),radial-gradient(circle at 85% 12%,#4adfff33,transparent 34%),linear-gradient(180deg,#061020,#081730)}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(#5f92dc1a 1px,transparent 1px),linear-gradient(90deg,#5f92dc1a 1px,transparent 1px);background-size:34px 34px}
+    .app{position:relative;z-index:1;display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+    .side{padding:12px;border-right:1px solid var(--line);background:#0a1a33dd;display:grid;gap:8px;align-content:start}
+    .brand{padding:10px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(150deg,#335f9c55,#13284a88)}
+    .brand b{font-family:Orbitron,sans-serif;font-size:1rem}.brand span{display:block;color:var(--muted);font-size:.78rem;margin-top:4px}
+    .nav{display:grid;gap:7px}.nav button{padding:9px 10px;text-align:left;border:1px solid transparent;border-radius:10px;background:#4f7ec82a;color:#dcecff;cursor:pointer;font-weight:700}
+    .nav button.active{border-color:var(--line);background:linear-gradient(120deg,#4adfff26,#5a90ff2e)}
+    .side .field{margin:0}.side-actions{display:grid;gap:8px}
+    .main{padding:12px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px}
+    .top{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;box-shadow:var(--shadow);color:var(--muted)}
+    .mono{font-family:"JetBrains Mono",monospace}
+    .page{display:none;gap:10px;align-content:start}.page.active{display:grid}
     .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px}
     .c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}
-    .card{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
-    h2,h3{margin:0 0 10px;font-weight:800;font-size:1rem}
-    .field{display:grid;gap:6px;margin:0 0 8px}.field label{color:#bdd0ec;font-size:.83rem}
-    input,select,textarea{width:100%;padding:9px 10px;border:1px solid #7ab0ff59;border-radius:9px;background:#091a35cc;color:var(--txt);font:.82rem "JetBrains Mono",monospace;outline:none}
-    textarea{min-height:70px;resize:vertical}
+    .card{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow);min-width:0}
+    h2,h3{margin:0 0 10px;font-size:1rem;font-weight:800}
+    .field{display:grid;gap:6px;margin-bottom:9px}.field label{font-size:.82rem;color:#c3d9f4}
+    input,select,textarea{width:100%;padding:9px 10px;border:1px solid #7cb3ff77;border-radius:10px;background:#081b38d4;color:var(--txt);outline:none}
+    input:focus,select:focus,textarea:focus{border-color:#4adfff;box-shadow:0 0 0 3px #4adfff22}
+    textarea{min-height:74px;resize:vertical}select[multiple]{min-height:108px}
     .row{display:flex;gap:8px;flex-wrap:wrap}
-    .btn{padding:9px 12px;border:1px solid transparent;border-radius:9px;background:linear-gradient(135deg,#46d9ff,#4f80ff);color:#031124;font-weight:800;cursor:pointer}
-    .btn.sec{background:#4f7cc226;color:#d9e8ff;border-color:var(--line)}
-    .btn.danger{background:linear-gradient(135deg,#ff9ab0,#ff6b8e);color:#2d0211}
-    table{width:100%;border-collapse:collapse;font-size:.82rem}th,td{padding:8px 6px;border-bottom:1px solid #7ab0ff33;text-align:left}th{font-size:.74rem;color:#c7dcff;text-transform:uppercase}
-    .mono{font-family:"JetBrains Mono",monospace}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.tab{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#4f7cc226;color:#d9e8ff;cursor:pointer;font-weight:700}.tab.active{background:#46d9ff22}
-    .tabp{display:none}.tabp.active{display:block}
-    .warn{padding:8px 10px;border:1px solid #ffd78088;background:#60451866;border-radius:10px;color:#ffe8b0;margin-bottom:10px}
-    .manual{padding:10px;border:1px dashed #7ab0ff88;border-radius:10px;background:#1a2d4f77}.manual[hidden]{display:none}
-    .kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.k{padding:10px;border:1px solid var(--line);border-radius:10px;background:#172c4eaa}.k small{color:var(--muted)}.k b{display:block;font-size:1.2rem;margin-top:4px}
-    .toast{position:fixed;right:14px;bottom:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#10203bcc;color:#eef6ff;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;max-width:380px}.toast.show{opacity:1;transform:translateY(0)}.toast.err{border-color:#ff7f9bbb}
-    @media(max-width:1080px){.app{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid var(--line)}.kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.c8,.c7,.c6,.c5,.c4{grid-column:span 12}}
+    .btn{padding:9px 12px;border:1px solid transparent;border-radius:10px;background:linear-gradient(130deg,var(--acc),var(--acc2));color:#031124;font-weight:800;cursor:pointer}
+    .btn.sec{background:#4f7ec82a;color:#dcecff;border-color:var(--line);font-weight:700}.btn.bad{background:linear-gradient(130deg,#ff9db6,#ff7d9d);color:#2f0312}.btn:disabled{opacity:.6;cursor:not-allowed}
+    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.kpi{padding:10px;border:1px solid var(--line);border-radius:10px;background:#152b4daa}.kpi small{color:var(--muted)}.kpi b{display:block;margin-top:4px;font-size:1.2rem}
+    .table{border:1px solid #7cb3ff40;border-radius:10px;overflow:auto}table{width:100%;border-collapse:collapse;min-width:560px;font-size:.82rem}th,td{padding:8px 6px;border-bottom:1px solid #7cb3ff33;text-align:left}th{font-size:.72rem;color:#c3d8f7;text-transform:uppercase;letter-spacing:.05em}
+    tr:hover td{background:#5388d31c}.tag{display:inline-block;border:1px solid #7cb3ff66;border-radius:999px;padding:2px 7px;font-size:.74rem;background:#4f7ec82a}
+    .warn{padding:8px 10px;border:1px solid #ffd77b88;border-radius:10px;background:#61471d77;color:#ffeab3;margin-bottom:10px}
+    .manual{padding:10px;border:1px dashed #7cb3ff88;border-radius:10px;background:#1b315480}.manual[hidden]{display:none}
+    .toast{position:fixed;right:14px;bottom:14px;z-index:10;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#0f2342ee;color:#eef7ff;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;max-width:380px}.toast.show{opacity:1;transform:translateY(0)}.toast.err{border-color:#ff8ea9bb}
+    @media(max-width:1220px){.c8,.c7,.c6,.c5,.c4{grid-column:span 12}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:920px){.app{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid var(--line)}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){.nav{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
 <div class="app">
   <aside class="side">
-    <div class="brand">OpenClaw Manager</div>
-    <button class="nav active" data-p="dash">Dashboard</button>
-    <button class="nav" data-p="agents">Agent Manager</button>
-    <button class="nav" data-p="versions">Version History</button>
-    <button class="nav" data-p="auth">Auth Capture</button>
-    <button class="nav" data-p="security">Account Security</button>
-    <button class="nav" data-p="settings">System Settings</button>
-    <button class="btn sec" id="refreshBtn" type="button">Refresh</button>
-    <button class="btn sec" id="logoutBtn" type="button">Logout</button>
+    <div class="brand"><b>OpenClaw Manager</b><span data-i18n="brand_sub">Gateway Control Plane</span></div>
+    <div class="nav">
+      <button class="active" data-p="dash" data-i18n="nav_dash">Dashboard</button>
+      <button data-p="agents" data-i18n="nav_agents">Agents</button>
+      <button data-p="channels" data-i18n="nav_channels">Channels</button>
+      <button data-p="models" data-i18n="nav_models">Models</button>
+      <button data-p="skills" data-i18n="nav_skills">Skills</button>
+      <button data-p="mcp" data-i18n="nav_mcp">MCP</button>
+      <button data-p="versions" data-i18n="nav_versions">Versions</button>
+      <button data-p="auth" data-i18n="nav_auth">Auth</button>
+      <button data-p="security" data-i18n="nav_security">Security</button>
+      <button data-p="settings" data-i18n="nav_settings">Settings</button>
+    </div>
+    <div class="side-actions">
+      <div class="field"><label for="lang" data-i18n="label_lang">Language</label><select id="lang"><option value="en">English</option><option value="zh">中文</option></select></div>
+      <button class="btn sec" id="refreshBtn" data-i18n="action_refresh">Refresh</button>
+      <button class="btn sec" id="logoutBtn" data-i18n="action_logout">Logout</button>
+    </div>
   </aside>
   <main class="main">
     <header class="top">
-      <div>User: <b>{{ username }}</b> | OpenClaw: <b class="mono">{{ openclaw_dir }}</b></div>
-      <div>Suggested version: <b id="nextVer">{{ suggested_version }}</b> | Auth mode: <b>{{ "GUI popup" if gui_available else "Headless URL" }}</b></div>
+      <div><span data-i18n="top_user">User</span>: <b>{{ username }}</b> | <span data-i18n="top_dir">OpenClaw Dir</span>: <b class="mono">{{ openclaw_dir }}</b></div>
+      <div><span data-i18n="top_version">Suggested Version</span>: <b class="mono" id="nextVer">{{ suggested_version }}</b> | <span data-i18n="top_mode">Auth Mode</span>: <b id="topMode"></b></div>
     </header>
 
     <section class="page active" id="p-dash">
-      <div class="card"><h2>System Overview</h2><div class="kpi"><div class="k"><small>Agents</small><b id="kAgents">0</b></div><div class="k"><small>Backups</small><b id="kBackups">0</b></div><div class="k"><small>Models</small><b id="kModels">0</b></div><div class="k"><small>Retention</small><b id="kKeep">{{ max_history }}</b></div></div></div>
+      <div class="card"><h2 data-i18n="dash_overview">System Overview</h2><div class="kpis"><div class="kpi"><small data-i18n="k_agents">Agents</small><b id="kAgents">0</b></div><div class="kpi"><small data-i18n="k_channels">Channels</small><b id="kChannels">0</b></div><div class="kpi"><small data-i18n="k_profiles">Model Profiles</small><b id="kProfiles">0</b></div><div class="kpi"><small data-i18n="k_skills">Skills</small><b id="kSkills">0</b></div><div class="kpi"><small data-i18n="k_mcp">MCP</small><b id="kMcp">0</b></div></div></div>
+      <div class="grid"><div class="card c7"><h2 data-i18n="dash_map">OpenClaw Mapping (Core)</h2><div id="guide"></div></div><div class="card c5"><h2 data-i18n="dash_backups">Recent Backups</h2><div id="dashBackups"></div></div></div>
     </section>
 
     <section class="page" id="p-agents">
       <div class="grid">
-        <div class="card c5">
-          <h2>Create Agent</h2>
-          <form id="fCreateAgent">
-            <div class="field"><label>Agent ID</label><input id="caId" required></div>
-            <div class="field"><label>Model</label><select id="caModel"></select></div>
-            <div class="field" id="caCustomWrap" style="display:none;"><label>Custom Model</label><input id="caCustom"></div>
-            <div class="field"><label>Initial Chat Entry</label><input id="caChat" value="default"></div>
-            <div class="field"><label>Initial Chat Name</label><input id="caChatName" value="Default Chat"></div>
-            <div class="field"><label>Auth Type</label><select id="caAuth"><option value="token">API Token</option><option value="password">Password</option></select></div>
-            <div class="field"><label>Token / Password</label><input id="caToken"></div>
-            <div class="field"><label>Backup Version</label><input id="caVer" value="{{ suggested_version }}"></div>
-            <div class="row"><button class="btn" type="submit">Create</button></div>
-          </form>
-        </div>
-        <div class="card c7">
-          <h2>Agent List</h2>
-          <table><thead><tr><th>ID</th><th>Default Model</th><th>Default Chat</th><th>Model Count</th><th>Chat Count</th><th>Updated At</th></tr></thead><tbody id="tbAgents"></tbody></table>
-        </div>
-        <div class="card c12">
-          <h2>Agent Detail: <span id="dAgent" class="mono">None selected</span></h2>
-          <div class="tabs"><button class="tab active" data-t="base">Basic</button><button class="tab" data-t="models">Models</button><button class="tab" data-t="chats">Chats</button></div>
-          <div class="tabp active" id="tp-base">
-            <form id="fBase" class="grid">
-              <div class="c4 field"><label>Auth Type</label><select id="bAuth"><option value="token">API Token</option><option value="password">Password</option></select></div>
-              <div class="c8 field"><label>Token / Password</label><input id="bToken"></div>
-              <div class="c6 field"><label>Default Model</label><select id="bDefModel"></select></div>
-              <div class="c6 field"><label>Default Chat</label><select id="bDefChat"></select></div>
-              <div class="c6 field"><label>Backup Version</label><input id="bVer"></div>
-              <div class="c6 field"><button class="btn" type="submit">Save Basic Settings</button></div>
-            </form>
-          </div>
-          <div class="tabp" id="tp-models">
-            <div class="grid">
-              <div class="c6"><h3>Model List</h3><table><thead><tr><th>Name</th><th>Model</th><th>Provider</th><th>Action</th></tr></thead><tbody id="tbModels"></tbody></table></div>
-              <div class="c6">
-                <h3>Add Model</h3>
-                <form id="fAddModel">
-                  <div class="field"><label>Model</label><select id="amModel"></select></div>
-                  <div class="field" id="amCustomWrap" style="display:none;"><label>Custom Model</label><input id="amCustom"></div>
-                  <div class="field"><label>Display Name</label><input id="amName"></div>
-                  <div class="field"><label>Provider</label><input id="amProvider"></div>
-                  <div class="field"><label><input type="checkbox" id="amDefault"> Set as default model</label></div>
-                  <div class="field"><label>Backup Version</label><input id="amVer"></div>
-                  <div class="row"><button class="btn" type="submit">Add</button></div>
-                </form>
-                <h3 style="margin-top:10px;">Edit Selected Model</h3>
-                <form id="fEditModel">
-                  <div class="field"><label>Display Name</label><input id="emName"></div>
-                  <div class="field"><label>Model</label><input id="emModel"></div>
-                  <div class="field"><label>Provider</label><input id="emProvider"></div>
-                  <div class="field"><label><input type="checkbox" id="emDefault"> Set as default model</label></div>
-                  <div class="field"><label>Backup Version</label><input id="emVer"></div>
-                  <div class="row"><button class="btn sec" type="submit">Save</button></div>
-                </form>
-              </div>
-            </div>
-          </div>
-          <div class="tabp" id="tp-chats">
-            <div class="grid">
-              <div class="c6"><h3>Chat List</h3><table><thead><tr><th>Name</th><th>Entry</th><th>Model ID</th><th>Action</th></tr></thead><tbody id="tbChats"></tbody></table></div>
-              <div class="c6">
-                <h3>Add Chat</h3>
-                <form id="fAddChat">
-                  <div class="field"><label>Name</label><input id="acName"></div>
-                  <div class="field"><label>Entry</label><input id="acEntry"></div>
-                  <div class="field"><label>Model</label><select id="acModel"></select></div>
-                  <div class="field"><label><input type="checkbox" id="acDefault"> Set as default chat</label></div>
-                  <div class="field"><label>Backup Version</label><input id="acVer"></div>
-                  <div class="row"><button class="btn" type="submit">Add</button></div>
-                </form>
-                <h3 style="margin-top:10px;">Edit Selected Chat</h3>
-                <form id="fEditChat">
-                  <div class="field"><label>Name</label><input id="ecName"></div>
-                  <div class="field"><label>Entry</label><input id="ecEntry"></div>
-                  <div class="field"><label>Model</label><select id="ecModel"></select></div>
-                  <div class="field"><label><input type="checkbox" id="ecDefault"> Set as default chat</label></div>
-                  <div class="field"><label>Backup Version</label><input id="ecVer"></div>
-                  <div class="row"><button class="btn sec" type="submit">Save</button></div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="card c4"><h2 data-i18n="agent_create">Create Agent</h2><form id="fCreateAgent"><div class="field"><label data-i18n="l_agent_id">Agent ID</label><input id="caId" required></div><div class="field"><label data-i18n="l_profile">Model Profile</label><select id="caProfile"></select></div><div class="field" id="caModelWrap"><label data-i18n="l_fallback_model">Fallback Model</label><select id="caModel"></select></div><div class="field" id="caCustomWrap" style="display:none;"><label data-i18n="l_custom_model">Custom Model</label><input id="caCustom"></div><div class="field"><label data-i18n="l_channels">Channels (multi)</label><select id="caChannels" multiple></select></div><div class="field"><label data-i18n="l_default_channel">Default Channel</label><select id="caDefaultChannel"></select></div><div class="field"><label data-i18n="l_skills">Skills (multi)</label><select id="caSkills" multiple></select></div><div class="field"><label data-i18n="l_mcp">MCP (multi)</label><select id="caMcps" multiple></select></div><div class="field"><label data-i18n="l_auth_type">Auth Type</label><select id="caAuth"><option value="token">API Token</option><option value="password">Password</option></select></div><div class="field"><label data-i18n="l_auth_value">Token / Password</label><input id="caAuthValue"></div><div class="field"><label data-i18n="l_version">Version</label><input id="caVer" value="{{ suggested_version }}"></div><div class="row"><button class="btn" type="submit" data-i18n="action_create">Create</button></div></form></div>
+        <div class="card c8"><h2 data-i18n="agent_list">Agent List</h2><div class="table"><table><thead><tr><th>ID</th><th data-i18n="th_profile">Profile</th><th data-i18n="th_model">Model</th><th data-i18n="th_channels">Channels</th><th data-i18n="th_updated">Updated</th></tr></thead><tbody id="tbAgents"></tbody></table></div></div>
+        <div class="card c12"><h2><span data-i18n="agent_detail">Agent Detail</span>: <span id="agentTitle" class="mono">-</span></h2><form id="fUpdateAgent" class="grid"><div class="c4 field"><label data-i18n="l_profile">Model Profile</label><select id="uaProfile"></select></div><div class="c4 field"><label data-i18n="l_default_model">Default Model</label><select id="uaDefModel"></select></div><div class="c4 field"><label data-i18n="l_default_chat">Default Chat</label><select id="uaDefChat"></select></div><div class="c6 field"><label data-i18n="l_channels">Channels (multi)</label><select id="uaChannels" multiple></select></div><div class="c6 field"><label data-i18n="l_default_channel">Default Channel</label><select id="uaDefaultChannel"></select></div><div class="c6 field"><label data-i18n="l_skills">Skills (multi)</label><select id="uaSkills" multiple></select></div><div class="c6 field"><label data-i18n="l_mcp">MCP (multi)</label><select id="uaMcps" multiple></select></div><div class="c3 field"><label data-i18n="l_auth_type">Auth Type</label><select id="uaAuth"><option value="token">API Token</option><option value="password">Password</option></select></div><div class="c5 field"><label data-i18n="l_auth_value">Token / Password</label><input id="uaAuthValue"></div><div class="c2 field"><label data-i18n="l_version">Version</label><input id="uaVer"></div><div class="c2 field"><label>&nbsp;</label><button class="btn" id="uaSubmit" type="submit" data-i18n="action_save" disabled>Save</button></div></form><div class="grid"><div class="card c6" style="margin:0;"><h3 data-i18n="agent_models">Bound Models</h3><div class="table"><table><thead><tr><th data-i18n="th_name">Name</th><th data-i18n="th_model">Model</th><th data-i18n="th_provider">Provider</th></tr></thead><tbody id="tbAgentModels"></tbody></table></div></div><div class="card c6" style="margin:0;"><h3 data-i18n="agent_chats">Bound Chats</h3><div class="table"><table><thead><tr><th data-i18n="th_name">Name</th><th>Entry</th><th data-i18n="th_model_id">Model ID</th></tr></thead><tbody id="tbAgentChats"></tbody></table></div></div></div></div>
       </div>
     </section>
 
-    <section class="page" id="p-versions">
-      <div class="grid">
-        <div class="card c4"><h2>Create Backup</h2><form id="fBackup"><div class="field"><label>Version (example: v1.0.0)</label><input id="bkVer" value="{{ suggested_version }}"></div><div class="field"><label>Note</label><textarea id="bkNote"></textarea></div><div class="row"><button class="btn" type="submit">Create</button></div></form></div>
-        <div class="card c8"><h2>History Versions</h2><table><thead><tr><th>Version</th><th>Created At</th><th>Created By</th><th>Note</th><th>Action</th></tr></thead><tbody id="tbBackups"></tbody></table></div>
-      </div>
-    </section>
+    <section class="page" id="p-channels"><div class="grid"><div class="card c4"><h2 data-i18n="channel_create">Create Channel</h2><form id="fCreateChannel"><div class="field"><label data-i18n="l_optional_id">ID (optional)</label><input id="chId"></div><div class="field"><label data-i18n="th_name">Name</label><input id="chName" required></div><div class="field"><label>Entry</label><input id="chEntry" required></div><div class="field"><label data-i18n="l_desc">Description</label><textarea id="chDesc"></textarea></div><div class="field"><label><input type="checkbox" id="chEnabled" checked> <span data-i18n="l_enabled">Enabled</span></label></div><div class="field"><label data-i18n="l_version">Version</label><input id="chVer"></div><div class="row"><button class="btn" type="submit" data-i18n="action_create">Create</button></div></form></div><div class="card c8"><h2 data-i18n="channel_list">Channel List</h2><div class="table"><table><thead><tr><th>ID</th><th data-i18n="th_name">Name</th><th>Entry</th><th data-i18n="th_usage">Usage</th><th data-i18n="th_enabled">Enabled</th><th data-i18n="th_action">Action</th></tr></thead><tbody id="tbChannels"></tbody></table></div></div><div class="card c12"><h2><span data-i18n="channel_edit">Edit Channel</span>: <span id="chTitle" class="mono">-</span></h2><form id="fEditChannel" class="grid"><div class="c3 field"><label data-i18n="th_name">Name</label><input id="echName"></div><div class="c3 field"><label>Entry</label><input id="echEntry"></div><div class="c4 field"><label data-i18n="l_desc">Description</label><input id="echDesc"></div><div class="c1 field"><label data-i18n="l_enabled">Enabled</label><input type="checkbox" id="echEnabled"></div><div class="c1 field"><label data-i18n="l_version">Version</label><input id="echVer"></div><div class="c12 row"><button class="btn" id="echSubmit" type="submit" disabled data-i18n="action_save">Save</button></div></form></div></div></section>
 
-    <section class="page" id="p-auth">
-      <div class="grid">
-        <div class="card c6"><h2>Auto Capture</h2><form id="fCapture"><div class="field"><label>Login URL</label><input id="auUrl" required></div><div class="field"><label>Username (optional)</label><input id="auUser"></div><div class="field"><label>Password (optional)</label><input id="auPass" type="password"></div><div class="row"><button class="btn" type="submit">Start Capture</button><button class="btn sec" id="genAuth" type="button">Generate Auth URL</button></div></form></div>
-        <div class="card c6"><h2>URL Auth</h2><div class="manual" id="manBox" hidden><div class="field"><label>Auth URL</label><input id="manUrl" class="mono" readonly></div><div class="field"><label>State</label><input id="manState" class="mono" readonly></div><div class="row"><button class="btn sec" id="copyUrl" type="button">Copy URL</button><button class="btn sec" id="checkAuth" type="button">Check Callback</button></div></div><div class="field"><label>Captured Token</label><textarea id="auToken" readonly></textarea></div></div>
-      </div>
-    </section>
+    <section class="page" id="p-models"><div class="grid"><div class="card c8"><div class="row" style="justify-content:space-between;margin-bottom:8px;"><h2 style="margin:0;" data-i18n="model_catalog">Supported Model Catalog</h2><button class="btn sec" id="syncModels" type="button" data-i18n="action_sync">Sync Local</button></div><div class="table"><table><thead><tr><th data-i18n="th_provider">Provider</th><th data-i18n="th_model">Model</th><th>Label</th></tr></thead><tbody id="tbCatalog"></tbody></table></div></div><div class="card c4"><h2 data-i18n="model_custom">Add Custom Model</h2><form id="fAddCatalogModel"><div class="field"><label data-i18n="th_provider">Provider</label><input id="cmProvider" value="Custom"></div><div class="field"><label data-i18n="th_model">Model</label><input id="cmModel" required></div><div class="field"><label>Label</label><input id="cmLabel"></div><div class="row"><button class="btn" type="submit" data-i18n="action_add">Add</button></div></form></div></div></section>
 
-    <section class="page" id="p-security">
-      <div class="card"><h2>Account Security</h2>{% if must_change_password %}<div class="warn">You are still using the default password. Please change it now.</div>{% endif %}<form id="fPwd" class="grid"><div class="c4 field"><label>Current Password</label><input id="pwCur" type="password" required></div><div class="c4 field"><label>New Password</label><input id="pwNew" type="password" required></div><div class="c4 field"><label>Confirm Password</label><input id="pwOk" type="password" required></div><div class="c4 field"><button class="btn" type="submit">Change Password</button></div></form></div>
-    </section>
+    <section class="page" id="p-skills"><div class="grid"><div class="card c4"><h2 data-i18n="skill_create">Create Skill</h2><form id="fCreateSkill"><div class="field"><label data-i18n="l_optional_id">ID (optional)</label><input id="skId"></div><div class="field"><label data-i18n="th_name">Name</label><input id="skName" required></div><div class="field"><label>Entry</label><input id="skEntry"></div><div class="field"><label data-i18n="l_desc">Description</label><textarea id="skDesc"></textarea></div><div class="field"><label><input type="checkbox" id="skEnabled" checked> <span data-i18n="l_enabled">Enabled</span></label></div><div class="field"><label data-i18n="l_version">Version</label><input id="skVer"></div><div class="row"><button class="btn" type="submit" data-i18n="action_create">Create</button></div></form></div><div class="card c8"><h2 data-i18n="skill_list">Skill List</h2><div class="table"><table><thead><tr><th>ID</th><th data-i18n="th_name">Name</th><th>Entry</th><th data-i18n="th_usage">Usage</th><th data-i18n="th_enabled">Enabled</th><th data-i18n="th_action">Action</th></tr></thead><tbody id="tbSkills"></tbody></table></div></div><div class="card c12"><h2><span data-i18n="skill_edit">Edit Skill</span>: <span id="skillTitle" class="mono">-</span></h2><form id="fEditSkill" class="grid"><div class="c3 field"><label data-i18n="th_name">Name</label><input id="eskName"></div><div class="c3 field"><label>Entry</label><input id="eskEntry"></div><div class="c4 field"><label data-i18n="l_desc">Description</label><input id="eskDesc"></div><div class="c1 field"><label data-i18n="l_enabled">Enabled</label><input type="checkbox" id="eskEnabled"></div><div class="c1 field"><label data-i18n="l_version">Version</label><input id="eskVer"></div><div class="c12 row"><button class="btn" id="eskSubmit" type="submit" disabled data-i18n="action_save">Save</button></div></form></div></div></section>
 
-    <section class="page" id="p-settings">
-      <div class="card c6"><h2>History Retention</h2><form id="fHistory"><div class="field"><label>Max backups (-1 means unlimited)</label><input id="stKeep" type="number" value="{{ max_history }}" min="-1"></div><div class="row"><button class="btn sec" type="submit">Save Policy</button></div></form></div>
-    </section>
+    <section class="page" id="p-mcp"><div class="grid"><div class="card c4"><h2 data-i18n="mcp_create">Create MCP Server</h2><form id="fCreateMcp"><div class="field"><label data-i18n="l_optional_id">ID (optional)</label><input id="mcpId"></div><div class="field"><label data-i18n="th_name">Name</label><input id="mcpName" required></div><div class="field"><label>Transport</label><select id="mcpTransport"><option value="http">http</option><option value="stdio">stdio</option></select></div><div class="field"><label>URL</label><input id="mcpUrl"></div><div class="field"><label>Command</label><input id="mcpCommand"></div><div class="field"><label>Args (comma)</label><input id="mcpArgs"></div><div class="field"><label>Env JSON</label><textarea id="mcpEnv"></textarea></div><div class="field"><label><input type="checkbox" id="mcpEnabled" checked> <span data-i18n="l_enabled">Enabled</span></label></div><div class="field"><label data-i18n="l_version">Version</label><input id="mcpVer"></div><div class="row"><button class="btn" type="submit" data-i18n="action_create">Create</button></div></form></div><div class="card c8"><h2 data-i18n="mcp_list">MCP Server List</h2><div class="table"><table><thead><tr><th>ID</th><th data-i18n="th_name">Name</th><th>Transport</th><th data-i18n="th_usage">Usage</th><th data-i18n="th_enabled">Enabled</th><th data-i18n="th_action">Action</th></tr></thead><tbody id="tbMcp"></tbody></table></div></div><div class="card c12"><h2><span data-i18n="mcp_edit">Edit MCP Server</span>: <span id="mcpTitle" class="mono">-</span></h2><form id="fEditMcp" class="grid"><div class="c2 field"><label data-i18n="th_name">Name</label><input id="emcpName"></div><div class="c2 field"><label>Transport</label><select id="emcpTransport"><option value="http">http</option><option value="stdio">stdio</option></select></div><div class="c3 field"><label>URL</label><input id="emcpUrl"></div><div class="c2 field"><label>Command</label><input id="emcpCommand"></div><div class="c3 field"><label>Args (comma)</label><input id="emcpArgs"></div><div class="c4 field"><label>Env JSON</label><input id="emcpEnv"></div><div class="c1 field"><label data-i18n="l_enabled">Enabled</label><input type="checkbox" id="emcpEnabled"></div><div class="c2 field"><label data-i18n="l_version">Version</label><input id="emcpVer"></div><div class="c2 field"><label>&nbsp;</label><button class="btn" id="emcpSubmit" type="submit" disabled data-i18n="action_save">Save</button></div></form></div></div></section>
+
+    <section class="page" id="p-versions"><div class="grid"><div class="card c4"><h2 data-i18n="ver_create">Create Backup</h2><form id="fBackup"><div class="field"><label data-i18n="l_version">Version</label><input id="bkVer" value="{{ suggested_version }}"></div><div class="field"><label data-i18n="l_note">Note</label><textarea id="bkNote"></textarea></div><div class="row"><button class="btn" type="submit" data-i18n="action_create">Create</button></div></form></div><div class="card c8"><h2 data-i18n="ver_list">Version History</h2><div class="table"><table><thead><tr><th data-i18n="l_version">Version</th><th data-i18n="th_created">Created</th><th data-i18n="th_by">By</th><th data-i18n="l_note">Note</th><th data-i18n="th_action">Action</th></tr></thead><tbody id="tbBackups"></tbody></table></div></div></div></section>
+
+    <section class="page" id="p-auth"><div class="grid"><div class="card c6"><h2 data-i18n="auth_capture">Capture Authorization</h2><form id="fCapture"><div class="field"><label>Login URL</label><input id="auUrl" required></div><div class="field"><label data-i18n="l_optional_user">Username (optional)</label><input id="auUser"></div><div class="field"><label data-i18n="l_optional_pass">Password (optional)</label><input id="auPass" type="password"></div><div class="row"><button class="btn" type="submit" data-i18n="action_capture">Start Capture</button><button class="btn sec" id="genAuth" type="button" data-i18n="action_gen_auth">Generate Auth URL</button></div></form></div><div class="card c6"><h2 data-i18n="auth_url">URL Authorization (Headless)</h2><div class="manual" id="manualBox" hidden><div class="field"><label>Auth URL</label><input id="manualUrl" class="mono" readonly></div><div class="field"><label>State</label><input id="manualState" class="mono" readonly></div><div class="row"><button class="btn sec" id="copyUrl" type="button" data-i18n="action_copy">Copy URL</button><button class="btn sec" id="checkAuth" type="button" data-i18n="action_check">Check Callback</button></div></div><div class="field"><label data-i18n="l_token">Captured Token</label><textarea id="auToken" readonly></textarea></div></div></div></section>
+
+    <section class="page" id="p-security"><div class="card"><h2 data-i18n="security_title">Account Security</h2>{% if must_change_password %}<div class="warn" data-i18n="security_warn">Default password still active. Please change it now.</div>{% endif %}<form id="fPwd" class="grid"><div class="c4 field"><label data-i18n="l_current_pwd">Current Password</label><input id="pwCur" type="password" required></div><div class="c4 field"><label data-i18n="l_new_pwd">New Password</label><input id="pwNew" type="password" required></div><div class="c4 field"><label data-i18n="l_confirm_pwd">Confirm Password</label><input id="pwOk" type="password" required></div><div class="c4 field"><button class="btn" type="submit" data-i18n="action_change_pwd">Change Password</button></div></form></div></section>
+
+    <section class="page" id="p-settings"><div class="card c6"><h2 data-i18n="settings_title">System Settings</h2><form id="fHistory"><div class="field"><label data-i18n="l_keep">Max backups (-1 unlimited)</label><input id="stKeep" type="number" min="-1" value="{{ max_history }}"></div><div class="row"><button class="btn sec" type="submit" data-i18n="action_save">Save</button></div></form></div></section>
   </main>
 </div>
 <div class="toast" id="toast"></div>
-
 <script>
 (() => {
   const MUST_CHANGE_PASSWORD = {{ "true" if must_change_password else "false" }};
-  const S = { models: [], agents: [], backups: [], selectedAgentId: "", selectedAgent: null, selectedModelId: "", selectedChatId: "", manualState: "", nextVersion: "{{ suggested_version }}" };
-  const VID = ["caVer","bVer","amVer","emVer","acVer","ecVer","bkVer"];
+  const GUI_AVAILABLE = {{ "true" if gui_available else "false" }};
+  const DEFAULT_VER = "{{ suggested_version }}";
+  const S = {lang:"en",models:[],profiles:[],channels:[],skills:[],mcps:[],agents:[],backups:[],guide:{},selAgentId:"",selAgent:null,selChannelId:"",selSkillId:"",selMcpId:"",manualState:"",nextVer:DEFAULT_VER};
+  const VIDS = ["caVer","uaVer","chVer","echVer","skVer","eskVer","mcpVer","emcpVer","bkVer"];
+
+  const I18N = {
+    en:{brand_sub:"Gateway Control Plane",nav_dash:"Dashboard",nav_agents:"Agents",nav_channels:"Channels",nav_models:"Models",nav_skills:"Skills",nav_mcp:"MCP",nav_versions:"Versions",nav_auth:"Auth",nav_security:"Security",nav_settings:"Settings",label_lang:"Language",action_refresh:"Refresh",action_logout:"Logout",top_user:"User",top_dir:"OpenClaw Dir",top_version:"Suggested Version",top_mode:"Auth Mode",mode_gui:"GUI Popup",mode_headless:"Headless URL",dash_overview:"System Overview",k_agents:"Agents",k_channels:"Channels",k_profiles:"Model Profiles",k_skills:"Skills",k_mcp:"MCP",dash_map:"OpenClaw Mapping (Core)",dash_backups:"Recent Backups",agent_create:"Create Agent",agent_list:"Agent List",agent_detail:"Agent Detail",agent_models:"Bound Models",agent_chats:"Bound Chats",channel_create:"Create Channel",channel_list:"Channel List",channel_edit:"Edit Channel",model_catalog:"Supported Model Catalog",model_custom:"Add Custom Model",skill_create:"Create Skill",skill_list:"Skill List",skill_edit:"Edit Skill",mcp_create:"Create MCP Server",mcp_list:"MCP Server List",mcp_edit:"Edit MCP Server",ver_create:"Create Backup",ver_list:"Version History",auth_capture:"Capture Authorization",auth_url:"URL Authorization (Headless)",security_title:"Account Security",security_warn:"Default password still active. Please change it now.",settings_title:"System Settings",l_agent_id:"Agent ID",l_profile:"Model Profile",l_fallback_model:"Fallback Model",l_custom_model:"Custom Model",l_channels:"Channels (multi)",l_default_channel:"Default Channel",l_skills:"Skills (multi)",l_mcp:"MCP (multi)",l_auth_type:"Auth Type",l_auth_value:"Token / Password",l_version:"Version",l_optional_id:"ID (optional)",l_desc:"Description",l_enabled:"Enabled",l_note:"Note",l_optional_user:"Username (optional)",l_optional_pass:"Password (optional)",l_token:"Captured Token",l_current_pwd:"Current Password",l_new_pwd:"New Password",l_confirm_pwd:"Confirm Password",l_keep:"Max backups (-1 unlimited)",l_default_model:"Default Model",l_default_chat:"Default Chat",th_profile:"Profile",th_model:"Model",th_channels:"Channels",th_updated:"Updated",th_name:"Name",th_usage:"Usage",th_enabled:"Enabled",th_action:"Action",th_provider:"Provider",th_model_id:"Model ID",th_created:"Created",th_by:"By",action_create:"Create",action_add:"Add",action_save:"Save",action_sync:"Sync Local",action_capture:"Start Capture",action_gen_auth:"Generate Auth URL",action_copy:"Copy URL",action_check:"Check Callback",action_change_pwd:"Change Password",pick:"Select",rollback:"Rollback",none:"None",custom_model:"Custom model...",refreshed:"Data refreshed",select_agent:"Please select an agent",select_channel:"Please select a channel",select_skill:"Please select a skill",select_mcp:"Please select an MCP server",require_model:"Please choose model/profile",require_login_url:"Please input login URL",copied:"URL copied",copy_fail:"Copy failed. Copy manually.",waiting:"Waiting callback",token_ok:"Token captured",url_ok:"Auth URL generated",create_ok:"Created",update_ok:"Updated",pwd_ok:"Password updated",save_ok:"Saved",init_fail:"Initialization failed",session:"Session expired",request_fail:"Request failed",no_data:"No data",no_versions:"No versions",on:"On",off:"Off",confirm_rollback:"Rollback to this version?"},
+    zh:{brand_sub:"\u7f51\u5173\u63a7\u5236\u4e2d\u5fc3",nav_dash:"\u4eea\u8868\u76d8",nav_agents:"Agent\u7ba1\u7406",nav_channels:"Channels\u7ba1\u7406",nav_models:"Models\u7ba1\u7406",nav_skills:"Skills\u7ba1\u7406",nav_mcp:"MCP\u7ba1\u7406",nav_versions:"\u5386\u53f2\u7248\u672c",nav_auth:"\u6388\u6743\u6355\u83b7",nav_security:"\u8d26\u53f7\u5b89\u5168",nav_settings:"\u7cfb\u7edf\u8bbe\u7f6e",label_lang:"\u8bed\u8a00",action_refresh:"\u5237\u65b0",action_logout:"\u9000\u51fa",top_user:"\u7528\u6237",top_dir:"OpenClaw\u76ee\u5f55",top_version:"\u5efa\u8bae\u7248\u672c",top_mode:"\u6388\u6743\u6a21\u5f0f",mode_gui:"GUI\u5f39\u7a97",mode_headless:"Headless URL",dash_overview:"\u7cfb\u7edf\u6982\u89c8",k_agents:"Agents",k_channels:"Channels",k_profiles:"\u6a21\u578b\u914d\u7f6e",k_skills:"Skills",k_mcp:"MCP",dash_map:"OpenClaw\u914d\u7f6e\u6620\u5c04",dash_backups:"\u6700\u8fd1\u5907\u4efd",agent_create:"\u521b\u5efa Agent",agent_list:"Agent\u5217\u8868",agent_detail:"Agent\u8be6\u60c5",agent_models:"\u5df2\u7ed1\u5b9a\u6a21\u578b",agent_chats:"\u5df2\u7ed1\u5b9a\u804a\u5929",channel_create:"\u521b\u5efa Channel",channel_list:"Channel\u5217\u8868",channel_edit:"\u7f16\u8f91 Channel",model_catalog:"\u652f\u6301\u6a21\u578b\u76ee\u5f55",model_custom:"\u6dfb\u52a0\u81ea\u5b9a\u4e49\u6a21\u578b",skill_create:"\u521b\u5efa Skill",skill_list:"Skill\u5217\u8868",skill_edit:"\u7f16\u8f91 Skill",mcp_create:"\u521b\u5efa MCP \u670d\u52a1",mcp_list:"MCP \u670d\u52a1\u5217\u8868",mcp_edit:"\u7f16\u8f91 MCP \u670d\u52a1",ver_create:"\u521b\u5efa\u5907\u4efd",ver_list:"\u5386\u53f2\u7248\u672c",auth_capture:"\u81ea\u52a8\u6355\u83b7\u6388\u6743",auth_url:"URL\u6388\u6743(Headless)",security_title:"\u8d26\u53f7\u5b89\u5168",security_warn:"\u9ed8\u8ba4\u5bc6\u7801\u4ecd\u5728\u4f7f\u7528\uff0c\u8bf7\u7acb\u5373\u4fee\u6539\u3002",settings_title:"\u7cfb\u7edf\u8bbe\u7f6e",l_agent_id:"Agent ID",l_profile:"\u6a21\u578b\u914d\u7f6e",l_fallback_model:"\u56de\u9000\u6a21\u578b",l_custom_model:"\u81ea\u5b9a\u4e49\u6a21\u578b",l_channels:"Channels(\u591a\u9009)",l_default_channel:"\u9ed8\u8ba4 Channel",l_skills:"Skills(\u591a\u9009)",l_mcp:"MCP(\u591a\u9009)",l_auth_type:"\u6388\u6743\u7c7b\u578b",l_auth_value:"Token/\u5bc6\u7801",l_version:"\u7248\u672c\u53f7",l_optional_id:"ID(\u53ef\u9009)",l_desc:"\u63cf\u8ff0",l_enabled:"\u542f\u7528",l_note:"\u5907\u6ce8",l_optional_user:"\u7528\u6237\u540d(\u53ef\u9009)",l_optional_pass:"\u5bc6\u7801(\u53ef\u9009)",l_token:"\u6355\u83b7 Token",l_current_pwd:"\u5f53\u524d\u5bc6\u7801",l_new_pwd:"\u65b0\u5bc6\u7801",l_confirm_pwd:"\u786e\u8ba4\u5bc6\u7801",l_keep:"\u6700\u5927\u5907\u4efd(-1\u4e0d\u9650)",l_default_model:"\u9ed8\u8ba4\u6a21\u578b",l_default_chat:"\u9ed8\u8ba4\u804a\u5929",th_profile:"\u914d\u7f6e",th_model:"\u6a21\u578b",th_channels:"Channels",th_updated:"\u66f4\u65b0\u65f6\u95f4",th_name:"\u540d\u79f0",th_usage:"\u4f7f\u7528\u6b21\u6570",th_enabled:"\u542f\u7528",th_action:"\u64cd\u4f5c",th_provider:"\u63d0\u4f9b\u65b9",th_model_id:"\u6a21\u578bID",th_created:"\u521b\u5efa",th_by:"\u64cd\u4f5c\u4eba",action_create:"\u521b\u5efa",action_add:"\u6dfb\u52a0",action_save:"\u4fdd\u5b58",action_sync:"\u540c\u6b65\u672c\u5730",action_capture:"\u5f00\u59cb\u6355\u83b7",action_gen_auth:"\u751f\u6210\u6388\u6743URL",action_copy:"\u590d\u5236URL",action_check:"\u68c0\u67e5\u56de\u8c03",action_change_pwd:"\u4fee\u6539\u5bc6\u7801",pick:"\u9009\u62e9",rollback:"\u56de\u6eda",none:"\u65e0",custom_model:"\u81ea\u5b9a\u4e49\u6a21\u578b...",refreshed:"\u6570\u636e\u5df2\u5237\u65b0",select_agent:"\u8bf7\u5148\u9009Agent",select_channel:"\u8bf7\u5148\u9009Channel",select_skill:"\u8bf7\u5148\u9009Skill",select_mcp:"\u8bf7\u5148\u9009MCP",require_model:"\u8bf7\u9009\u62e9\u6a21\u578b/\u914d\u7f6e",require_login_url:"\u8bf7\u8f93\u5165Login URL",copied:"URL\u5df2\u590d\u5236",copy_fail:"\u590d\u5236\u5931\u8d25\uff0c\u8bf7\u624b\u52a8\u590d\u5236",waiting:"\u7b49\u5f85\u56de\u8c03",token_ok:"Token\u6355\u83b7\u6210\u529f",url_ok:"\u6388\u6743URL\u5df2\u751f\u6210",create_ok:"\u521b\u5efa\u6210\u529f",update_ok:"\u66f4\u65b0\u6210\u529f",pwd_ok:"\u5bc6\u7801\u5df2\u66f4\u65b0",save_ok:"\u4fdd\u5b58\u6210\u529f",init_fail:"\u521d\u59cb\u5316\u5931\u8d25",session:"\u4f1a\u8bdd\u5df2\u8fc7\u671f",request_fail:"\u8bf7\u6c42\u5931\u8d25",no_data:"\u6682\u65e0\u6570\u636e",no_versions:"\u6682\u65e0\u7248\u672c",on:"\u542f\u7528",off:"\u505c\u7528",confirm_rollback:"\u786e\u5b9a\u56de\u6eda\u5230\u8be5\u7248\u672c?"}
+  };
+
   const el = (id) => document.getElementById(id);
   const toast = el("toast");
-  const nav = [...document.querySelectorAll(".nav")];
-  const pages = [...document.querySelectorAll(".page")];
-  const tabs = [...document.querySelectorAll(".tab")];
-  const tabp = [...document.querySelectorAll(".tabp")];
-  const note = (m,e=false) => { toast.textContent=m; toast.classList.add("show"); toast.classList.toggle("err",e); clearTimeout(note.t); note.t=setTimeout(()=>toast.classList.remove("show"),2600); };
-  const esc = (v)=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#39;");
-  const setPage = (p)=>{ nav.forEach(n=>n.classList.toggle("active",n.dataset.p===p)); pages.forEach(x=>x.classList.toggle("active",x.id===`p-${p}`)); };
-  const setTab = (t)=>{ tabs.forEach(x=>x.classList.toggle("active",x.dataset.t===t)); tabp.forEach(x=>x.classList.toggle("active",x.id===`tp-${t}`)); };
-  const api = async (u,m="GET",b=null)=>{ const o={method:m,credentials:"same-origin",headers:{"Content-Type":"application/json"}}; if(b!==null)o.body=JSON.stringify(b); const r=await fetch(u,o); if(r.status===401){location.href="/login"; throw new Error("Session expired");} const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.error||d.detail||"Request failed"); return d; };
-  const fill = (elx,rows,key,fmt)=>{ elx.innerHTML=rows.map(r=>`<option value="${esc(r[key])}">${esc(fmt(r))}</option>`).join(""); };
-  const cmap = ()=>{ const m=new Map(); S.models.forEach(x=>{const k=String(x.model||"").trim(); if(k && !m.has(k)) m.set(k,x);}); return m; };
-  const mopts = ()=>{ const g={}; S.models.forEach(x=>((g[x.provider||"Custom"]??=[]).push(x))); let h=""; Object.keys(g).sort().forEach(p=>{ h+=`<optgroup label="${esc(p)}">`; g[p].forEach(x=>h+=`<option value="${esc(x.model)}" data-provider="${esc(p)}">${esc(x.label)} (${esc(x.model)})</option>`); h+="</optgroup>"; }); return h+'<option value="__custom__">Custom model...</option>'; };
-  const bindCustom = (sid,wid,pid="")=>{ const s=el(sid),w=el(wid),p=pid?el(pid):null; const f=()=>{ w.style.display=s.value==="__custom__"?"block":"none"; if(p && s.value!=="__custom__"){ const opt=s.options[s.selectedIndex]; p.value=opt?.dataset?.provider||""; } }; s.onchange=f; f(); };
-  const mval = (sid,cid)=>{ const s=el(sid),raw=(s.value||"").trim(); if(raw==="__custom__") return {model:(el(cid).value||"").trim(),provider:"Custom"}; return {model:raw,provider:s.options[s.selectedIndex]?.dataset?.provider||"Custom"}; };
-  const clearDetail = ()=>{ el("dAgent").textContent="None selected"; el("tbModels").innerHTML='<tr><td colspan="4">No models</td></tr>'; el("tbChats").innerHTML='<tr><td colspan="4">No chats</td></tr>'; ["bDefModel","bDefChat","acModel","ecModel"].forEach(id=>el(id).innerHTML=""); el("bAuth").value="token"; el("bToken").value=""; };
-  const renderAgents = ()=>{ const t=el("tbAgents"); if(!S.agents.length){ t.innerHTML='<tr><td colspan="6">No agents</td></tr>'; return; } t.innerHTML=S.agents.map(a=>`<tr data-id="${esc(a.id)}" ${S.selectedAgentId===a.id?'style="background:#3d79df22"':''}><td class="mono">${esc(a.id)}</td><td class="mono">${esc(a.model||"-")}</td><td>${esc(a.chat_entry||"-")}</td><td>${esc(a.models_count||0)}</td><td>${esc(a.chats_count||0)}</td><td class="mono">${esc(a.updated_at||"-")}</td></tr>`).join(""); t.querySelectorAll("tr[data-id]").forEach(r=>r.onclick=()=>pickAgent(r.dataset.id||"")); };
-  const renderBackups = ()=>{ const t=el("tbBackups"); if(!S.backups.length){ t.innerHTML='<tr><td colspan="5">No versions</td></tr>'; return; } t.innerHTML=S.backups.map(b=>`<tr><td class="mono">${esc(b.version)}</td><td class="mono">${esc(b.created_at||"-")}</td><td>${esc(b.created_by||"-")}</td><td>${esc(b.exists===false?`${b.note||""} (missing folder)`:(b.note||"-"))}</td><td><button class="btn danger rb" data-v="${esc(b.version)}" type="button">Rollback</button></td></tr>`).join(""); t.querySelectorAll(".rb").forEach(b=>b.onclick=async()=>{const v=b.dataset.v||""; if(!v) return; if(!confirm(`Rollback to ${v}?`)) return; try{const r=await api("/api/rollback","POST",{version:v}); note(r.message||"Rollback done"); await load();}catch(e){note(e.message,true)}}); };
-  const renderDetail = ()=>{ const a=S.selectedAgent; if(!a){ clearDetail(); return; } el("dAgent").textContent=S.selectedAgentId||"None selected"; el("bAuth").value=a.auth_type||"token"; el("bToken").value=a.token_or_pass||""; fill(el("bDefModel"),a.models||[],"id",m=>`${m.name} (${m.model})`); fill(el("bDefChat"),a.chats||[],"id",c=>`${c.name} [${c.entry}]`); fill(el("acModel"),a.models||[],"id",m=>`${m.name} (${m.model})`); fill(el("ecModel"),a.models||[],"id",m=>`${m.name} (${m.model})`); el("bDefModel").value=a.default_model_id||""; el("bDefChat").value=a.default_chat_id||""; const tm=el("tbModels"); tm.innerHTML=(a.models||[]).map(m=>`<tr ${S.selectedModelId===m.id?'style="background:#3d79df22"':''}><td>${m.id===a.default_model_id?'<span class="mono">[Default]</span> ':''}${esc(m.name||"-")}</td><td class="mono">${esc(m.model||"-")}</td><td>${esc(m.provider||"-")}</td><td><button class="btn sec em" data-id="${esc(m.id)}" type="button">Edit</button></td></tr>`).join("")||'<tr><td colspan="4">No models</td></tr>'; tm.querySelectorAll(".em").forEach(b=>b.onclick=()=>{S.selectedModelId=b.dataset.id||""; const m=(a.models||[]).find(x=>x.id===S.selectedModelId); if(!m)return; el("emName").value=m.name||""; el("emModel").value=m.model||""; el("emProvider").value=m.provider||""; el("emDefault").checked=(m.id===a.default_model_id); el("emVer").value=S.nextVersion; renderDetail();}); const tc=el("tbChats"); tc.innerHTML=(a.chats||[]).map(c=>`<tr ${S.selectedChatId===c.id?'style="background:#3d79df22"':''}><td>${c.id===a.default_chat_id?'<span class="mono">[Default]</span> ':''}${esc(c.name||"-")}</td><td class="mono">${esc(c.entry||"-")}</td><td class="mono">${esc(c.model_id||"-")}</td><td><button class="btn sec ec" data-id="${esc(c.id)}" type="button">Edit</button></td></tr>`).join("")||'<tr><td colspan="4">No chats</td></tr>'; tc.querySelectorAll(".ec").forEach(b=>b.onclick=()=>{S.selectedChatId=b.dataset.id||""; const c=(a.chats||[]).find(x=>x.id===S.selectedChatId); if(!c)return; el("ecName").value=c.name||""; el("ecEntry").value=c.entry||""; el("ecModel").value=c.model_id||""; el("ecDefault").checked=(c.id===a.default_chat_id); el("ecVer").value=S.nextVersion; renderDetail();}); };
-  const pickAgent = async(id)=>{ if(!id) return; S.selectedAgentId=id; S.selectedModelId=""; S.selectedChatId=""; const d=await api(`/api/agents/${encodeURIComponent(id)}`); S.selectedAgent=d.agent||null; renderAgents(); renderDetail(); };
-  const load = async()=>{ const d=await api("/api/state"); S.models=d.model_catalog||[]; S.agents=d.agents||[]; S.backups=d.backups||[]; S.nextVersion=d.suggested_version||"v1.0.0"; el("kAgents").textContent=String(S.agents.length); el("kBackups").textContent=String(S.backups.length); el("kModels").textContent=String(S.models.length); el("kKeep").textContent=String(d.max_history); el("nextVer").textContent=S.nextVersion; el("stKeep").value=String(d.max_history); el("caModel").innerHTML=mopts(); el("amModel").innerHTML=mopts(); bindCustom("caModel","caCustomWrap"); bindCustom("amModel","amCustomWrap","amProvider"); VID.forEach(id=>{const x=el(id); if(x)x.value=S.nextVersion;}); renderAgents(); renderBackups(); if(S.selectedAgentId){ if(S.agents.some(x=>x.id===S.selectedAgentId)) await pickAgent(S.selectedAgentId); else {S.selectedAgentId=""; S.selectedAgent=null; renderDetail();} } else renderDetail(); };
-  nav.forEach(n=>n.onclick=()=>setPage(n.dataset.p)); tabs.forEach(t=>t.onclick=()=>setTab(t.dataset.t));
-  el("logoutBtn").onclick=async()=>{ try{await api("/api/logout","POST",{});}finally{location.href="/login";} };
-  el("refreshBtn").onclick=async()=>{ try{await load(); note("Data refreshed");}catch(e){note(e.message,true);} };
-  el("fCreateAgent").onsubmit=async(e)=>{ e.preventDefault(); try{const m=mval("caModel","caCustom"); if(!m.model) throw new Error("Please choose or input model"); const c=cmap().get(m.model); const p={id:el("caId").value.trim(),model:m.model,model_name:c?.label||m.model,model_provider:c?.provider||m.provider||"Custom",chat_entry:el("caChat").value.trim(),chat_name:el("caChatName").value.trim(),auth_type:el("caAuth").value,token_or_pass:el("caToken").value.trim(),version:el("caVer").value.trim()}; const r=await api("/api/agents","POST",p); note(r.message||"Created"); await load(); await pickAgent(p.id);}catch(err){note(err.message,true);} };
-  el("fBase").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId) return note("Please select an agent",true); try{const p={auth_type:el("bAuth").value,token_or_pass:el("bToken").value.trim(),default_model_id:el("bDefModel").value,default_chat_id:el("bDefChat").value,version:el("bVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}`,"PATCH",p); note(r.message||"Updated"); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
-  el("fAddModel").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId) return note("Please select an agent",true); try{const m=mval("amModel","amCustom"); if(!m.model) throw new Error("Please choose or input model"); const c=cmap().get(m.model); const p={model:m.model,name:el("amName").value.trim()||(c?.label||m.model),provider:el("amProvider").value.trim()||c?.provider||m.provider||"Custom",set_default:el("amDefault").checked,version:el("amVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}/models`,"POST",p); note(r.message||"Model added"); e.target.reset(); bindCustom("amModel","amCustomWrap","amProvider"); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
-  el("fEditModel").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId||!S.selectedModelId) return note("Please select a model",true); try{const p={name:el("emName").value.trim(),model:el("emModel").value.trim(),provider:el("emProvider").value.trim(),set_default:el("emDefault").checked,version:el("emVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}/models/${encodeURIComponent(S.selectedModelId)}`,"PATCH",p); note(r.message||"Model updated"); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
-  el("fAddChat").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId) return note("Please select an agent",true); try{const p={name:el("acName").value.trim(),entry:el("acEntry").value.trim(),model_id:el("acModel").value,set_default:el("acDefault").checked,version:el("acVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}/chats`,"POST",p); note(r.message||"Chat added"); e.target.reset(); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
-  el("fEditChat").onsubmit=async(e)=>{ e.preventDefault(); if(!S.selectedAgentId||!S.selectedChatId) return note("Please select a chat",true); try{const p={name:el("ecName").value.trim(),entry:el("ecEntry").value.trim(),model_id:el("ecModel").value,set_default:el("ecDefault").checked,version:el("ecVer").value.trim()}; const r=await api(`/api/agents/${encodeURIComponent(S.selectedAgentId)}/chats/${encodeURIComponent(S.selectedChatId)}`,"PATCH",p); note(r.message||"Chat updated"); await load(); await pickAgent(S.selectedAgentId);}catch(err){note(err.message,true);} };
-  el("fBackup").onsubmit=async(e)=>{ e.preventDefault(); try{const p={version:el("bkVer").value.trim(),note:el("bkNote").value.trim()}; const r=await api("/api/backups","POST",p); note(r.message||"Backup created"); await load();}catch(err){note(err.message,true);} };
-  el("fCapture").onsubmit=async(e)=>{ e.preventDefault(); try{const p={login_url:el("auUrl").value.trim(),username:el("auUser").value.trim(),password:el("auPass").value}; const r=await api("/api/capture-auth","POST",p); if(r.status==="success"&&r.token){ el("auToken").value=r.token; return note("Token captured"); } if(r.status==="pending_external_auth"&&r.manual){ S.manualState=r.manual.state||""; el("manUrl").value=r.manual.auth_url||""; el("manState").value=r.manual.state||""; el("manBox").hidden=false; return note(r.message||"Auth URL generated"); } note(r.message||"Capture failed",true);}catch(err){note(err.message,true);} };
-  el("genAuth").onclick=async()=>{ const u=el("auUrl").value.trim(); if(!u) return note("Please input login URL",true); try{const r=await api("/api/capture-auth/url-start","POST",{login_url:u}); if(r.manual){ S.manualState=r.manual.state||""; el("manUrl").value=r.manual.auth_url||""; el("manState").value=r.manual.state||""; el("manBox").hidden=false; note("Auth URL generated"); }}catch(err){note(err.message,true);} };
-  el("copyUrl").onclick=async()=>{ const v=el("manUrl").value.trim(); if(!v) return note("No URL to copy",true); try{await navigator.clipboard.writeText(v); note("URL copied");}catch(_){note("Copy failed. Please copy manually",true);} };
-  el("checkAuth").onclick=async()=>{ if(!S.manualState) return note("No auth session",true); try{const r=await api(`/api/capture-auth/url-result?state=${encodeURIComponent(S.manualState)}`); if(r.status==="success"&&r.token){ el("auToken").value=r.token; return note("Token captured"); } note(r.message||"Waiting callback");}catch(err){note(err.message,true);} };
-  el("fPwd").onsubmit=async(e)=>{ e.preventDefault(); try{await api("/api/change-password","POST",{current_password:el("pwCur").value,new_password:el("pwNew").value,confirm_password:el("pwOk").value}); e.target.reset(); note("Password updated");}catch(err){note(err.message,true);} };
-  el("fHistory").onsubmit=async(e)=>{ e.preventDefault(); try{await api("/api/settings/history","POST",{max_history:Number(el("stKeep").value)}); note("Policy saved"); await load();}catch(err){note(err.message,true);} };
-  load().then(()=>{ if(MUST_CHANGE_PASSWORD){ setPage("security"); note("Default password in use. Please change it now."); }}).catch(err=>note(err.message||"Initialization failed",true));
+  const t = (k) => (I18N[S.lang] && I18N[S.lang][k]) || I18N.en[k] || k;
+  const note = (m,e=false) => { toast.textContent=m||""; toast.classList.add("show"); toast.classList.toggle("err",e); clearTimeout(note.t); note.t=setTimeout(()=>toast.classList.remove("show"),2600); };
+  const esc = (v) => String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#39;");
+  const ids = (x) => Array.isArray(x)?x:(typeof x==="string"?x.split(","):[]);
+  const uniq = (arr) => [...new Set(arr.map(v=>String(v).trim()).filter(Boolean))];
+  const pick = (arr,id) => arr.find(x=>String(x.id)===String(id));
+  const getMulti = (id) => [...el(id).options].filter(o=>o.selected).map(o=>o.value).filter(Boolean);
+  const setMulti = (id,vals) => { const s=new Set(uniq(vals)); [...el(id).options].forEach(o=>o.selected=s.has(o.value)); };
+  const tf = (b) => b ? t("on") : t("off");
+
+  const api = async (u,m="GET",b=null) => {
+    const o={method:m,credentials:"same-origin",headers:{"Content-Type":"application/json"}};
+    if(b!==null)o.body=JSON.stringify(b);
+    const r=await fetch(u,o);
+    if(r.status===401){location.href="/login"; throw new Error(t("session"));}
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||d.detail||t("request_fail"));
+    return d;
+  };
+
+  const setPage = (p) => {
+    document.querySelectorAll(".nav button").forEach(n=>n.classList.toggle("active",n.dataset.p===p));
+    document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id===`p-${p}`));
+  };
+
+  const setI18n = () => {
+    document.documentElement.lang = S.lang==="zh"?"zh-CN":"en";
+    localStorage.setItem("ocm_lang",S.lang);
+    el("lang").value = S.lang;
+    document.querySelectorAll("[data-i18n]").forEach(n=>{const k=n.getAttribute("data-i18n"); if(k) n.textContent=t(k);});
+    el("topMode").textContent = GUI_AVAILABLE ? t("mode_gui") : t("mode_headless");
+    renderAll();
+  };
+  const setOptions = (id,rows,val,lab,none=false) => {
+    let h=none?`<option value="">${esc(t("none"))}</option>`:"";
+    h+=rows.map(r=>`<option value="${esc(val(r))}">${esc(lab(r))}</option>`).join("");
+    el(id).innerHTML=h;
+  };
+
+  const modelOpts = () => {
+    const g={};
+    S.models.forEach(x=>((g[x.provider||"Custom"]??=[]).push(x)));
+    let h="";
+    Object.keys(g).sort().forEach(p=>{
+      h+=`<optgroup label="${esc(p)}">`;
+      g[p].forEach(x=>h+=`<option value="${esc(x.model)}" data-provider="${esc(x.provider||"Custom")}">${esc(x.label||x.model)} (${esc(x.model)})</option>`);
+      h+="</optgroup>";
+    });
+    return h+`<option value="__custom__">${esc(t("custom_model"))}</option>`;
+  };
+
+  const syncCustom = (sid,wid,pid="") => {
+    const s=el(sid),w=el(wid),p=pid?el(pid):null;
+    const f=()=>{const c=s.value==="__custom__"; w.style.display=c?"block":"none"; if(p&&!c){const o=s.options[s.selectedIndex]; p.value=o?.dataset?.provider||p.value||"Custom";}};
+    s.onchange=f; f();
+  };
+
+  const modelValue = (sid,cid) => {
+    const s=el(sid);
+    if(s.value==="__custom__") return {model:el(cid).value.trim(),provider:"Custom"};
+    const o=s.options[s.selectedIndex];
+    return {model:s.value.trim(),provider:o?.dataset?.provider||"Custom"};
+  };
+
+  const refreshDefChannel = (multiId,defId,prefer="") => {
+    const rows=getMulti(multiId).map(id=>pick(S.channels,id)).filter(Boolean);
+    el(defId).innerHTML=!rows.length?`<option value="">${esc(t("none"))}</option>`:rows.map(r=>`<option value="${esc(r.id)}">${esc(r.name)} [${esc(r.entry)}]</option>`).join("");
+    if(prefer&&rows.some(r=>r.id===prefer)) el(defId).value=prefer; else if(rows.length) el(defId).value=rows[0].id;
+  };
+
+  const renderGuide = () => {
+    const g=S.guide||{};
+    const req=Array.isArray(g.agent_core_required)?g.agent_core_required.join(", "):"-";
+    const rec=Array.isArray(g.agent_core_recommended)?g.agent_core_recommended.join(", "):"-";
+    const shared=!!g?.model_auth?.shared_across_agents;
+    const channel=!!g?.channels_design?.independent_management;
+    el("guide").innerHTML=`<div class="tag">Required: ${esc(req)}</div> <div class="tag">Recommended: ${esc(rec)}</div> <div class="tag">Model Auth Shared: ${shared?"Yes":"No"}</div> <div class="tag">Channel Independent: ${channel?"Yes":"No"}</div>`;
+  };
+
+  const renderDashBackups = () => {
+    el("dashBackups").innerHTML=!S.backups.length?esc(t("no_versions")):S.backups.slice(0,8).map(b=>`<span class="tag mono">${esc(b.version||"-")}</span>`).join(" ");
+  };
+
+  const renderAgents = () => {
+    const tb=el("tbAgents");
+    if(!S.agents.length){tb.innerHTML=`<tr><td colspan="5">${esc(t("no_data"))}</td></tr>`; return;}
+    tb.innerHTML=S.agents.map(a=>`<tr data-id="${esc(a.id)}" ${S.selAgentId===a.id?'style="background:#5388d330"':""}><td class="mono">${esc(a.id)}</td><td>${esc(a.model_profile_id||"-")}</td><td class="mono">${esc(a.model||"-")}</td><td>${esc(a.channel_count||0)}</td><td class="mono">${esc(a.updated_at||"-")}</td></tr>`).join("");
+    tb.querySelectorAll("tr[data-id]").forEach(r=>r.onclick=()=>pickAgent(r.dataset.id||""));
+  };
+
+  const renderAgentDetail = () => {
+    setOptions("uaProfile",S.profiles,x=>x.id,x=>`${x.name} (${x.model})`,true);
+    setOptions("uaChannels",S.channels,x=>x.id,x=>`${x.name} [${x.entry}]`);
+    setOptions("uaSkills",S.skills,x=>x.id,x=>`${x.name} [${x.entry}]`);
+    setOptions("uaMcps",S.mcps,x=>x.id,x=>`${x.name} (${x.transport})`);
+    const a=S.selAgent;
+    if(!a){
+      el("agentTitle").textContent="-"; el("uaSubmit").disabled=true;
+      el("tbAgentModels").innerHTML=`<tr><td colspan="3">${esc(t("no_data"))}</td></tr>`;
+      el("tbAgentChats").innerHTML=`<tr><td colspan="3">${esc(t("no_data"))}</td></tr>`;
+      setOptions("uaDefModel",[],x=>x.id,x=>x.id,true); setOptions("uaDefChat",[],x=>x.id,x=>x.id,true); setOptions("uaDefaultChannel",[],x=>x.id,x=>x.id,true);
+      return;
+    }
+    el("agentTitle").textContent=a.id; el("uaSubmit").disabled=false;
+    el("uaProfile").value=a.model_profile_id||"";
+    setMulti("uaChannels",a.channel_ids||[]); setMulti("uaSkills",a.skill_ids||[]); setMulti("uaMcps",a.mcp_ids||[]);
+    el("uaAuth").value=a.auth_type||"token"; el("uaAuthValue").value=a.token_or_pass||""; el("uaVer").value=S.nextVer;
+    setOptions("uaDefModel",a.models||[],x=>x.id,x=>`${x.name} (${x.model})`,true); setOptions("uaDefChat",a.chats||[],x=>x.id,x=>`${x.name} [${x.entry}]`,true);
+    el("uaDefModel").value=a.default_model_id||""; el("uaDefChat").value=a.default_chat_id||"";
+    refreshDefChannel("uaChannels","uaDefaultChannel",a.default_channel_id||"");
+    el("tbAgentModels").innerHTML=(a.models||[]).map(m=>`<tr><td>${m.id===a.default_model_id?`<span class="tag">${esc(t("l_default_model"))}</span>`:""}${esc(m.name||"-")}</td><td class="mono">${esc(m.model||"-")}</td><td>${esc(m.provider||"-")}</td></tr>`).join("")||`<tr><td colspan="3">${esc(t("no_data"))}</td></tr>`;
+    el("tbAgentChats").innerHTML=(a.chats||[]).map(c=>`<tr><td>${c.id===a.default_chat_id?`<span class="tag">${esc(t("l_default_chat"))}</span>`:""}${esc(c.name||"-")}</td><td class="mono">${esc(c.entry||"-")}</td><td class="mono">${esc(c.model_id||"-")}</td></tr>`).join("")||`<tr><td colspan="3">${esc(t("no_data"))}</td></tr>`;
+  };
+
+  const renderChannels = () => {
+    const tb=el("tbChannels");
+    if(!S.channels.length){tb.innerHTML=`<tr><td colspan="6">${esc(t("no_data"))}</td></tr>`;return;}
+    tb.innerHTML=S.channels.map(c=>`<tr><td class="mono">${esc(c.id)}</td><td>${esc(c.name)}</td><td class="mono">${esc(c.entry)}</td><td>${esc(c.usage||0)}</td><td>${esc(tf(!!c.enabled))}</td><td><button class="btn sec pick-ch" data-id="${esc(c.id)}">${esc(t("pick"))}</button></td></tr>`).join("");
+    tb.querySelectorAll(".pick-ch").forEach(b=>b.onclick=()=>{const c=pick(S.channels,b.dataset.id||""); if(!c)return; S.selChannelId=c.id; el("chTitle").textContent=c.id; el("echName").value=c.name||""; el("echEntry").value=c.entry||""; el("echDesc").value=c.description||""; el("echEnabled").checked=!!c.enabled; el("echVer").value=S.nextVer; el("echSubmit").disabled=false;});
+  };
+
+  const renderSkills = () => {
+    const tb=el("tbSkills");
+    if(!S.skills.length){tb.innerHTML=`<tr><td colspan="6">${esc(t("no_data"))}</td></tr>`;return;}
+    tb.innerHTML=S.skills.map(s=>`<tr><td class="mono">${esc(s.id)}</td><td>${esc(s.name)}</td><td class="mono">${esc(s.entry||"-")}</td><td>${esc(s.usage||0)}</td><td>${esc(tf(!!s.enabled))}</td><td><button class="btn sec pick-sk" data-id="${esc(s.id)}">${esc(t("pick"))}</button></td></tr>`).join("");
+    tb.querySelectorAll(".pick-sk").forEach(b=>b.onclick=()=>{const s=pick(S.skills,b.dataset.id||""); if(!s)return; S.selSkillId=s.id; el("skillTitle").textContent=s.id; el("eskName").value=s.name||""; el("eskEntry").value=s.entry||""; el("eskDesc").value=s.description||""; el("eskEnabled").checked=!!s.enabled; el("eskVer").value=S.nextVer; el("eskSubmit").disabled=false;});
+  };
+
+  const renderMcps = () => {
+    const tb=el("tbMcp");
+    if(!S.mcps.length){tb.innerHTML=`<tr><td colspan="6">${esc(t("no_data"))}</td></tr>`;return;}
+    tb.innerHTML=S.mcps.map(m=>`<tr><td class="mono">${esc(m.id)}</td><td>${esc(m.name)}</td><td class="mono">${esc(m.transport||"-")}</td><td>${esc(m.usage||0)}</td><td>${esc(tf(!!m.enabled))}</td><td><button class="btn sec pick-mcp" data-id="${esc(m.id)}">${esc(t("pick"))}</button></td></tr>`).join("");
+    tb.querySelectorAll(".pick-mcp").forEach(b=>b.onclick=()=>{const m=pick(S.mcps,b.dataset.id||""); if(!m)return; S.selMcpId=m.id; el("mcpTitle").textContent=m.id; el("emcpName").value=m.name||""; el("emcpTransport").value=m.transport||"http"; el("emcpUrl").value=m.url||""; el("emcpCommand").value=m.command||""; el("emcpArgs").value=Array.isArray(m.args)?m.args.join(","):""; el("emcpEnv").value=m.env_json||""; el("emcpEnabled").checked=!!m.enabled; el("emcpVer").value=S.nextVer; el("emcpSubmit").disabled=false;});
+  };
+
+  const renderBackups = () => {
+    const tb=el("tbBackups");
+    if(!S.backups.length){tb.innerHTML=`<tr><td colspan="5">${esc(t("no_versions"))}</td></tr>`;return;}
+    tb.innerHTML=S.backups.map(b=>`<tr><td class="mono">${esc(b.version||"-")}</td><td class="mono">${esc(b.created_at||"-")}</td><td>${esc(b.created_by||"-")}</td><td>${esc(b.note||"-")}</td><td><button class="btn bad rb" data-v="${esc(b.version||"")}">${esc(t("rollback"))}</button></td></tr>`).join("");
+    tb.querySelectorAll(".rb").forEach(b=>b.onclick=async()=>{const v=b.dataset.v||""; if(!v)return; if(!confirm(t("confirm_rollback")))return; try{await api("/api/rollback","POST",{version:v}); await load(); note(`${t("rollback")}: ${v}`);}catch(e){note(e.message,true);}});
+  };
+
+  const renderAll = () => {
+    el("kAgents").textContent=String(S.agents.length);
+    el("kChannels").textContent=String(S.channels.length);
+    el("kProfiles").textContent=String(S.profiles.length);
+    el("kSkills").textContent=String(S.skills.length);
+    el("kMcp").textContent=String(S.mcps.length);
+    renderGuide(); renderDashBackups(); renderAgents(); renderAgentDetail(); renderChannels(); renderSkills(); renderMcps(); renderBackups();
+  };
+
+  const refreshCreateOptions = () => {
+    setOptions("caProfile",S.profiles,x=>x.id,x=>`${x.name} (${x.model})`,true);
+    setOptions("caChannels",S.channels,x=>x.id,x=>`${x.name} [${x.entry}]`);
+    setOptions("caSkills",S.skills,x=>x.id,x=>`${x.name} [${x.entry}]`);
+    setOptions("caMcps",S.mcps,x=>x.id,x=>`${x.name} (${x.transport})`);
+    el("caModel").innerHTML=modelOpts();
+    syncCustom("caModel","caCustomWrap");
+    refreshDefChannel("caChannels","caDefaultChannel");
+    const has=!!el("caProfile").value.trim();
+    el("caModelWrap").style.display=has?"none":"block";
+    el("caCustomWrap").style.display=has?"none":(el("caModel").value==="__custom__"?"block":"none");
+  };
+  const pickAgent = async (id) => {
+    if(!id) return;
+    try {
+      const d=await api(`/api/agents/${encodeURIComponent(id)}`);
+      S.selAgentId=id;
+      S.selAgent=d.agent||null;
+      renderAgents();
+      renderAgentDetail();
+    } catch(e){ note(e.message,true); }
+  };
+
+  const load = async () => {
+    const d=await api("/api/state");
+    S.models=d.model_catalog||[];
+    S.profiles=d.model_profiles||[];
+    S.channels=d.channels||[];
+    S.skills=d.skills||[];
+    S.mcps=d.mcp_servers||[];
+    S.agents=d.agents||[];
+    S.backups=d.backups||[];
+    S.guide=d.openclaw_guide||{};
+    S.nextVer=d.suggested_version||DEFAULT_VER;
+    el("nextVer").textContent=S.nextVer;
+    el("stKeep").value=String(d.max_history??-1);
+    VIDS.forEach(i=>{const n=el(i); if(n)n.value=S.nextVer;});
+    refreshCreateOptions();
+    if(S.selAgentId && S.agents.some(a=>a.id===S.selAgentId)) await pickAgent(S.selAgentId); else {S.selAgentId=""; S.selAgent=null;}
+    setI18n();
+  };
+
+  document.querySelectorAll(".nav button").forEach(n=>n.onclick=()=>setPage(n.dataset.p||"dash"));
+  el("lang").onchange=()=>{S.lang=el("lang").value||"en"; setI18n();};
+  el("refreshBtn").onclick=async()=>{try{await load(); note(t("refreshed"));}catch(e){note(e.message,true);}};
+  el("logoutBtn").onclick=async()=>{try{await api("/api/logout","POST",{});}finally{location.href="/login";}};
+
+  el("caProfile").onchange=refreshCreateOptions;
+  el("caModel").onchange=refreshCreateOptions;
+  el("caChannels").onchange=()=>refreshDefChannel("caChannels","caDefaultChannel");
+  el("uaChannels").onchange=()=>refreshDefChannel("uaChannels","uaDefaultChannel",el("uaDefaultChannel").value);
+
+  el("fCreateAgent").onsubmit=async(e)=>{e.preventDefault(); try{const pid=el("caProfile").value.trim(); const mv=modelValue("caModel","caCustom"); if(!pid&&!mv.model) throw new Error(t("require_model")); const p={id:el("caId").value.trim(),model_profile_id:pid,model:mv.model,model_name:mv.model,model_provider:mv.provider,channel_ids:getMulti("caChannels"),default_channel_id:el("caDefaultChannel").value,skill_ids:getMulti("caSkills"),mcp_ids:getMulti("caMcps"),auth_type:el("caAuth").value,token_or_pass:el("caAuthValue").value.trim(),version:el("caVer").value.trim(),chat_entry:"default",chat_name:"Default"}; await api("/api/agents","POST",p); note(t("create_ok")); const id=p.id; e.target.reset(); await load(); if(id) await pickAgent(id);}catch(err){note(err.message,true);}};
+  el("fUpdateAgent").onsubmit=async(e)=>{e.preventDefault(); if(!S.selAgentId) return note(t("select_agent"),true); try{const p={model_profile_id:el("uaProfile").value.trim(),channel_ids:getMulti("uaChannels"),default_channel_id:el("uaDefaultChannel").value,skill_ids:getMulti("uaSkills"),mcp_ids:getMulti("uaMcps"),auth_type:el("uaAuth").value,token_or_pass:el("uaAuthValue").value.trim(),default_model_id:el("uaDefModel").value,default_chat_id:el("uaDefChat").value,version:el("uaVer").value.trim()}; await api(`/api/agents/${encodeURIComponent(S.selAgentId)}`,"PATCH",p); note(t("update_ok")); await load(); await pickAgent(S.selAgentId);}catch(err){note(err.message,true);}};
+
+  el("fCreateChannel").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/channels","POST",{id:el("chId").value.trim(),name:el("chName").value.trim(),entry:el("chEntry").value.trim(),description:el("chDesc").value.trim(),enabled:el("chEnabled").checked,version:el("chVer").value.trim()}); note(t("create_ok")); e.target.reset(); await load();}catch(err){note(err.message,true);}};
+  el("fEditChannel").onsubmit=async(e)=>{e.preventDefault(); if(!S.selChannelId) return note(t("select_channel"),true); try{await api(`/api/channels/${encodeURIComponent(S.selChannelId)}`,"PATCH",{name:el("echName").value.trim(),entry:el("echEntry").value.trim(),description:el("echDesc").value.trim(),enabled:el("echEnabled").checked,version:el("echVer").value.trim()}); note(t("update_ok")); await load();}catch(err){note(err.message,true);}};
+
+  el("syncModels").onclick=async()=>{try{await api("/api/models/sync","POST",{}); await load(); note(t("refreshed"));}catch(err){note(err.message,true);}};
+  el("fAddCatalogModel").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/models/custom","POST",{provider:el("cmProvider").value.trim()||"Custom",model:el("cmModel").value.trim(),label:el("cmLabel").value.trim()}); e.target.reset(); await load(); note(t("save_ok"));}catch(err){note(err.message,true);}};
+
+  el("fCreateSkill").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/skills","POST",{id:el("skId").value.trim(),name:el("skName").value.trim(),entry:el("skEntry").value.trim(),description:el("skDesc").value.trim(),enabled:el("skEnabled").checked,version:el("skVer").value.trim()}); note(t("create_ok")); e.target.reset(); await load();}catch(err){note(err.message,true);}};
+  el("fEditSkill").onsubmit=async(e)=>{e.preventDefault(); if(!S.selSkillId) return note(t("select_skill"),true); try{await api(`/api/skills/${encodeURIComponent(S.selSkillId)}`,"PATCH",{name:el("eskName").value.trim(),entry:el("eskEntry").value.trim(),description:el("eskDesc").value.trim(),enabled:el("eskEnabled").checked,version:el("eskVer").value.trim()}); note(t("update_ok")); await load();}catch(err){note(err.message,true);}};
+
+  el("fCreateMcp").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/mcp-servers","POST",{id:el("mcpId").value.trim(),name:el("mcpName").value.trim(),transport:el("mcpTransport").value,url:el("mcpUrl").value.trim(),command:el("mcpCommand").value.trim(),args:uniq(ids(el("mcpArgs").value)),env_json:el("mcpEnv").value.trim(),enabled:el("mcpEnabled").checked,version:el("mcpVer").value.trim()}); note(t("create_ok")); e.target.reset(); await load();}catch(err){note(err.message,true);}};
+  el("fEditMcp").onsubmit=async(e)=>{e.preventDefault(); if(!S.selMcpId) return note(t("select_mcp"),true); try{await api(`/api/mcp-servers/${encodeURIComponent(S.selMcpId)}`,"PATCH",{name:el("emcpName").value.trim(),transport:el("emcpTransport").value,url:el("emcpUrl").value.trim(),command:el("emcpCommand").value.trim(),args:uniq(ids(el("emcpArgs").value)),env_json:el("emcpEnv").value.trim(),enabled:el("emcpEnabled").checked,version:el("emcpVer").value.trim()}); note(t("update_ok")); await load();}catch(err){note(err.message,true);}};
+
+  el("fBackup").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/backups","POST",{version:el("bkVer").value.trim(),note:el("bkNote").value.trim()}); note(t("create_ok")); await load();}catch(err){note(err.message,true);}};
+  el("fCapture").onsubmit=async(e)=>{e.preventDefault(); try{const r=await api("/api/capture-auth","POST",{login_url:el("auUrl").value.trim(),username:el("auUser").value.trim(),password:el("auPass").value}); if(r.status==="success"&&r.token){el("auToken").value=r.token; return note(t("token_ok"));} if(r.status==="pending_external_auth"&&r.manual){S.manualState=r.manual.state||""; el("manualUrl").value=r.manual.auth_url||""; el("manualState").value=r.manual.state||""; el("manualBox").hidden=false; return note(t("url_ok"));}}catch(err){note(err.message,true);}};
+  el("genAuth").onclick=async()=>{try{const u=el("auUrl").value.trim(); if(!u) throw new Error(t("require_login_url")); const r=await api("/api/capture-auth/url-start","POST",{login_url:u}); if(r.manual){S.manualState=r.manual.state||""; el("manualUrl").value=r.manual.auth_url||""; el("manualState").value=r.manual.state||""; el("manualBox").hidden=false; note(t("url_ok"));}}catch(err){note(err.message,true);}};
+  el("copyUrl").onclick=async()=>{const u=el("manualUrl").value.trim(); if(!u) return; try{await navigator.clipboard.writeText(u); note(t("copied"));}catch(_){note(t("copy_fail"),true);}};
+  el("checkAuth").onclick=async()=>{if(!S.manualState) return note(t("waiting")); try{const r=await api(`/api/capture-auth/url-result?state=${encodeURIComponent(S.manualState)}`); if(r.status==="success"&&r.token){el("auToken").value=r.token; return note(t("token_ok"));} note(r.message||t("waiting"));}catch(err){note(err.message,true);}};
+
+  el("fPwd").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/change-password","POST",{current_password:el("pwCur").value,new_password:el("pwNew").value,confirm_password:el("pwOk").value}); e.target.reset(); note(t("pwd_ok"));}catch(err){note(err.message,true);}};
+  el("fHistory").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/settings/history","POST",{max_history:Number(el("stKeep").value)}); note(t("save_ok")); await load();}catch(err){note(err.message,true);}};
+
+  const boot = async () => {
+    const ls=localStorage.getItem("ocm_lang");
+    S.lang=(ls==="zh"||ls==="en")?ls:(navigator.language.toLowerCase().startsWith("zh")?"zh":"en");
+    try { await load(); if(MUST_CHANGE_PASSWORD){ setPage("security"); note(t("security_warn")); } }
+    catch(err){ note(err.message||t("init_fail"),true); }
+  };
+
+  boot();
 })();
 </script>
 </body>

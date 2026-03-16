@@ -39,6 +39,10 @@ CONFIG_FILE = DATA_DIR / "manager_config.json"
 USERS_FILE = DATA_DIR / "users.json"
 VERSIONS_FILE = DATA_DIR / "history_versions.json"
 MODEL_CATALOG_FILE = DATA_DIR / "model_catalog.json"
+CHANNELS_FILE = DATA_DIR / "channels.json"
+MODEL_PROFILES_FILE = DATA_DIR / "model_profiles.json"
+SKILLS_FILE = DATA_DIR / "skills.json"
+MCP_FILE = DATA_DIR / "mcp_servers.json"
 
 SESSION_COOKIE_NAME = "openclaw_manager_session"
 SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
@@ -313,6 +317,12 @@ def load_model_catalog() -> list[Dict[str, str]]:
     return rows
 
 
+def sync_model_catalog_snapshot() -> list[Dict[str, str]]:
+    models = load_model_catalog()
+    write_json_file(MODEL_CATALOG_FILE, {"models": models, "synced_at": now_iso()})
+    return models
+
+
 def ensure_model_catalog_file() -> None:
     if MODEL_CATALOG_FILE.exists():
         return
@@ -389,6 +399,248 @@ def write_json_file(path: Path, data: Any) -> None:
     )
     temp_path.replace(path)
 
+
+def ensure_list_file(path: Path, key: str) -> None:
+    if path.exists():
+        return
+    write_json_file(path, {key: []})
+
+
+def normalize_id_list(raw: Any) -> list[str]:
+    rows: list[str] = []
+    if isinstance(raw, list):
+        values = raw
+    elif isinstance(raw, str):
+        values = [p.strip() for p in raw.split(",")]
+    else:
+        values = []
+    for item in values:
+        text = normalize_text(item)
+        if text:
+            rows.append(text)
+    # preserve input order, remove duplicates
+    return list(dict.fromkeys(rows))
+
+
+def normalize_channel_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    now = now_iso()
+    channel_id = normalize_text(item.get("id"), make_object_id("channel"))
+    entry = normalize_text(item.get("entry"), "default")
+    name = normalize_text(item.get("name"), entry)
+    return {
+        "id": channel_id,
+        "name": name,
+        "entry": entry,
+        "description": normalize_text(item.get("description")),
+        "enabled": bool(item.get("enabled", True)),
+        "created_at": normalize_text(item.get("created_at"), now),
+        "updated_at": normalize_text(item.get("updated_at"), now),
+    }
+
+
+def load_channels() -> list[Dict[str, Any]]:
+    payload = read_json_file(CHANNELS_FILE, {"channels": []})
+    raw = payload.get("channels", []) if isinstance(payload, dict) else []
+    rows: list[Dict[str, Any]] = []
+    if isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, dict):
+                rows.append(normalize_channel_item(item))
+    return rows
+
+
+def save_channels(rows: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
+    normalized = [normalize_channel_item(item) for item in rows]
+    write_json_file(CHANNELS_FILE, {"channels": normalized})
+    return normalized
+
+
+def ensure_default_channels() -> None:
+    channels = load_channels()
+    if channels:
+        return
+    save_channels(
+        [
+            {
+                "id": "channel_default",
+                "name": "Default Channel",
+                "entry": "default",
+                "description": "Default chat entry",
+                "enabled": True,
+            }
+        ]
+    )
+
+
+def normalize_model_profile_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    now = now_iso()
+    model = normalize_text(item.get("model"))
+    provider = normalize_text(item.get("provider"), "Custom")
+    profile_id = normalize_text(item.get("id"), make_object_id("model_profile"))
+    if not model:
+        raise HTTPException(status_code=400, detail="model cannot be empty")
+    return {
+        "id": profile_id,
+        "name": normalize_text(item.get("name"), model),
+        "provider": provider,
+        "model": model,
+        "auth_mode": normalize_text(item.get("auth_mode"), "shared").lower(),
+        "auth_profile": normalize_text(item.get("auth_profile")),
+        "auth_value": normalize_text(item.get("auth_value")),
+        "base_url": normalize_text(item.get("base_url")),
+        "enabled": bool(item.get("enabled", True)),
+        "created_at": normalize_text(item.get("created_at"), now),
+        "updated_at": normalize_text(item.get("updated_at"), now),
+    }
+
+
+def load_model_profiles() -> list[Dict[str, Any]]:
+    payload = read_json_file(MODEL_PROFILES_FILE, {"models": []})
+    raw = payload.get("models", []) if isinstance(payload, dict) else []
+    rows: list[Dict[str, Any]] = []
+    if isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, dict):
+                try:
+                    rows.append(normalize_model_profile_item(item))
+                except HTTPException:
+                    continue
+    return rows
+
+
+def save_model_profiles(rows: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
+    normalized: list[Dict[str, Any]] = []
+    for item in rows:
+        normalized.append(normalize_model_profile_item(item))
+    write_json_file(MODEL_PROFILES_FILE, {"models": normalized})
+    return normalized
+
+
+def ensure_default_model_profile() -> None:
+    profiles = load_model_profiles()
+    if profiles:
+        return
+    catalog = load_model_catalog()
+    fallback = catalog[0] if catalog else {"provider": "OpenAI", "model": "gpt-4o-mini", "label": "gpt-4o-mini"}
+    save_model_profiles(
+        [
+            {
+                "id": "model_default",
+                "name": normalize_text(fallback.get("label"), fallback.get("model", "default")),
+                "provider": normalize_text(fallback.get("provider"), "Custom"),
+                "model": normalize_text(fallback.get("model"), "gpt-4o-mini"),
+                "auth_mode": "shared",
+                "enabled": True,
+            }
+        ]
+    )
+
+
+def normalize_skill_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    now = now_iso()
+    skill_id = normalize_text(item.get("id"), make_object_id("skill"))
+    name = normalize_text(item.get("name"), "Unnamed Skill")
+    return {
+        "id": skill_id,
+        "name": name,
+        "description": normalize_text(item.get("description")),
+        "entry": normalize_text(item.get("entry"), name.lower().replace(" ", "_")),
+        "enabled": bool(item.get("enabled", True)),
+        "created_at": normalize_text(item.get("created_at"), now),
+        "updated_at": normalize_text(item.get("updated_at"), now),
+    }
+
+
+def load_skills() -> list[Dict[str, Any]]:
+    payload = read_json_file(SKILLS_FILE, {"skills": []})
+    raw = payload.get("skills", []) if isinstance(payload, dict) else []
+    rows: list[Dict[str, Any]] = []
+    if isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, dict):
+                rows.append(normalize_skill_item(item))
+    return rows
+
+
+def save_skills(rows: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
+    normalized = [normalize_skill_item(item) for item in rows]
+    write_json_file(SKILLS_FILE, {"skills": normalized})
+    return normalized
+
+
+def normalize_mcp_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    now = now_iso()
+    mcp_id = normalize_text(item.get("id"), make_object_id("mcp"))
+    name = normalize_text(item.get("name"), "Unnamed MCP")
+    return {
+        "id": mcp_id,
+        "name": name,
+        "transport": normalize_text(item.get("transport"), "http"),
+        "url": normalize_text(item.get("url")),
+        "command": normalize_text(item.get("command")),
+        "args": normalize_id_list(item.get("args")),
+        "env_json": normalize_text(item.get("env_json")),
+        "enabled": bool(item.get("enabled", True)),
+        "created_at": normalize_text(item.get("created_at"), now),
+        "updated_at": normalize_text(item.get("updated_at"), now),
+    }
+
+
+def load_mcp_servers() -> list[Dict[str, Any]]:
+    payload = read_json_file(MCP_FILE, {"mcps": []})
+    raw = payload.get("mcps", []) if isinstance(payload, dict) else []
+    rows: list[Dict[str, Any]] = []
+    if isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, dict):
+                rows.append(normalize_mcp_item(item))
+    return rows
+
+
+def save_mcp_servers(rows: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
+    normalized = [normalize_mcp_item(item) for item in rows]
+    write_json_file(MCP_FILE, {"mcps": normalized})
+    return normalized
+
+
+def usage_counter(agents: list[Dict[str, Any]], key: str) -> Dict[str, int]:
+    counter: Dict[str, int] = {}
+    for agent in agents:
+        values = normalize_id_list(agent.get(key))
+        for value in values:
+            counter[value] = counter.get(value, 0) + 1
+        single = normalize_text(agent.get(key.replace("_ids", "_id")))
+        if single:
+            counter[single] = counter.get(single, 0) + 1
+    return counter
+
+
+def summarize_openclaw_basics() -> Dict[str, Any]:
+    return {
+        "agent_core_required": [
+            "id",
+            "model",
+            "auth_type",
+            "token_or_pass",
+            "chat_entry",
+        ],
+        "agent_core_recommended": [
+            "model_profile_id",
+            "channel_ids",
+            "skill_ids",
+            "mcp_ids",
+        ],
+        "model_auth": {
+            "shared_across_agents": True,
+            "reason": "Model auth can be centralized as shared auth profiles and reused by multiple agents.",
+            "suggested_fields": ["auth_mode", "auth_profile", "auth_value", "base_url"],
+        },
+        "channels_design": {
+            "independent_management": True,
+            "bind_on_agent": True,
+            "multi_bind_supported": True,
+        },
+    }
 
 def render_template(name: str, **context: Any) -> HTMLResponse:
     tpl = template_env.get_template(name)
@@ -846,6 +1098,15 @@ def normalize_agent_config(agent_id: str, payload: Dict[str, Any]) -> Dict[str, 
         default_chat_id = chats[0]["id"]
 
     default_chat = next((c for c in chats if c["id"] == default_chat_id), chats[0])
+    channel_ids = normalize_id_list(payload.get("channel_ids"))
+    if not channel_ids:
+        channel_ids = normalize_id_list(payload.get("channels"))
+    default_channel_id = normalize_text(payload.get("default_channel_id"))
+    if channel_ids and default_channel_id not in channel_ids:
+        default_channel_id = channel_ids[0]
+    model_profile_id = normalize_text(payload.get("model_profile_id"))
+    skill_ids = normalize_id_list(payload.get("skill_ids"))
+    mcp_ids = normalize_id_list(payload.get("mcp_ids"))
 
     normalized = {
         "id": agent_id,
@@ -855,6 +1116,11 @@ def normalize_agent_config(agent_id: str, payload: Dict[str, Any]) -> Dict[str, 
         "chats": chats,
         "default_model_id": default_model_id,
         "default_chat_id": default_chat_id,
+        "model_profile_id": model_profile_id,
+        "channel_ids": channel_ids,
+        "default_channel_id": default_channel_id,
+        "skill_ids": skill_ids,
+        "mcp_ids": mcp_ids,
         "model": default_model["model"],
         "chat_entry": default_chat["entry"],
         "created_at": normalize_text(payload.get("created_at"), timestamp),
@@ -870,10 +1136,73 @@ def read_agent_config(agent_dir: Path) -> Dict[str, Any]:
 
 
 def save_agent_config(agent_dir: Path, payload: Dict[str, Any]) -> Dict[str, Any]:
-    normalized = normalize_agent_config(agent_dir.name, payload)
+    normalized = sync_agent_bindings(normalize_agent_config(agent_dir.name, payload))
     normalized["updated_at"] = now_iso()
     write_json_file(agent_dir / "agent.json", normalized)
     return normalized
+
+
+def sync_agent_bindings(agent_payload: Dict[str, Any]) -> Dict[str, Any]:
+    current = normalize_agent_config(normalize_text(agent_payload.get("id"), "agent"), agent_payload)
+
+    model_profile_id = normalize_text(current.get("model_profile_id"))
+    channel_ids = normalize_id_list(current.get("channel_ids"))
+    default_channel_id = normalize_text(current.get("default_channel_id"))
+
+    profiles = {item["id"]: item for item in load_model_profiles() if item.get("enabled", True)}
+    channels = {item["id"]: item for item in load_channels() if item.get("enabled", True)}
+
+    # Bind model profile to default model in the agent config.
+    if model_profile_id and model_profile_id in profiles:
+        profile = profiles[model_profile_id]
+        bound_id = f"profile_{model_profile_id}"
+        models = list(current.get("models", []))
+        target = next((m for m in models if normalize_text(m.get("id")) == bound_id), None)
+        if not target:
+            target = {
+                "id": bound_id,
+                "name": normalize_text(profile.get("name"), profile.get("model", "model")),
+                "provider": normalize_text(profile.get("provider"), "Custom"),
+                "model": normalize_text(profile.get("model"), "gpt-4o-mini"),
+            }
+            models.insert(0, target)
+        else:
+            target["name"] = normalize_text(profile.get("name"), profile.get("model", "model"))
+            target["provider"] = normalize_text(profile.get("provider"), "Custom")
+            target["model"] = normalize_text(profile.get("model"), "gpt-4o-mini")
+        current["models"] = models
+        current["default_model_id"] = bound_id
+
+    # Bind global channels to chats using stable ids.
+    if channel_ids:
+        chats = [c for c in list(current.get("chats", [])) if not normalize_text(c.get("id")).startswith("channel_")]
+        for channel_id in channel_ids:
+            channel = channels.get(channel_id)
+            if not channel:
+                continue
+            chat_id = f"channel_{channel_id}"
+            existing = next((c for c in chats if normalize_text(c.get("id")) == chat_id), None)
+            if not existing:
+                chats.append(
+                    {
+                        "id": chat_id,
+                        "name": normalize_text(channel.get("name"), "channel"),
+                        "entry": normalize_text(channel.get("entry"), "default"),
+                        "model_id": normalize_text(current.get("default_model_id")),
+                    }
+                )
+            else:
+                existing["name"] = normalize_text(channel.get("name"), "channel")
+                existing["entry"] = normalize_text(channel.get("entry"), "default")
+                if not normalize_text(existing.get("model_id")):
+                    existing["model_id"] = normalize_text(current.get("default_model_id"))
+        current["chats"] = chats
+        if default_channel_id not in channel_ids:
+            default_channel_id = channel_ids[0]
+        current["default_channel_id"] = default_channel_id
+        current["default_chat_id"] = f"channel_{default_channel_id}"
+
+    return normalize_agent_config(normalize_text(current.get("id"), "agent"), current)
 
 
 def list_agents() -> list[Dict[str, Any]]:
@@ -902,8 +1231,23 @@ def list_agents() -> list[Dict[str, Any]]:
                 "updated_at": payload.get("updated_at", "-"),
                 "models_count": len(payload.get("models", [])),
                 "chats_count": len(payload.get("chats", [])),
+                "model_profile_id": normalize_text(payload.get("model_profile_id")),
+                "channel_count": len(normalize_id_list(payload.get("channel_ids"))),
+                "skill_count": len(normalize_id_list(payload.get("skill_ids"))),
+                "mcp_count": len(normalize_id_list(payload.get("mcp_ids"))),
             }
         )
+    return rows
+
+
+def list_agent_details() -> list[Dict[str, Any]]:
+    rows: list[Dict[str, Any]] = []
+    if not AGENTS_DIR.exists():
+        return rows
+    for agent_dir in sorted(AGENTS_DIR.iterdir(), key=lambda p: p.name.lower()):
+        if not agent_dir.is_dir():
+            continue
+        rows.append(read_agent_config(agent_dir))
     return rows
 
 
@@ -973,6 +1317,12 @@ AGENTS_DIR.mkdir(parents=True, exist_ok=True)
 
 manager_config = load_manager_config()
 ensure_model_catalog_file()
+ensure_list_file(CHANNELS_FILE, "channels")
+ensure_list_file(MODEL_PROFILES_FILE, "models")
+ensure_list_file(SKILLS_FILE, "skills")
+ensure_list_file(MCP_FILE, "mcps")
+ensure_default_channels()
+ensure_default_model_profile()
 ensure_default_admin()
 ensure_versions_index()
 if STARTUP_BACKUP_ENABLED:
@@ -1051,6 +1401,28 @@ async def index(request: Request) -> HTMLResponse:
 @app.get("/api/state")
 async def api_state(request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
+    agent_details = list_agent_details()
+    channel_usage = usage_counter(agent_details, "channel_ids")
+    skill_usage = usage_counter(agent_details, "skill_ids")
+    mcp_usage = usage_counter(agent_details, "mcp_ids")
+    profile_usage = usage_counter(agent_details, "model_profile_ids")
+
+    channels = load_channels()
+    for item in channels:
+        item["usage"] = channel_usage.get(item["id"], 0)
+
+    model_profiles = load_model_profiles()
+    for item in model_profiles:
+        item["usage"] = profile_usage.get(item["id"], 0)
+
+    skills = load_skills()
+    for item in skills:
+        item["usage"] = skill_usage.get(item["id"], 0)
+
+    mcps = load_mcp_servers()
+    for item in mcps:
+        item["usage"] = mcp_usage.get(item["id"], 0)
+
     return {
         "status": "success",
         "username": user["username"],
@@ -1059,6 +1431,11 @@ async def api_state(request: Request) -> Dict[str, Any]:
         "backups": list_backups(),
         "model_catalog": load_model_catalog(),
         "suggested_version": suggest_next_version(),
+        "channels": channels,
+        "model_profiles": model_profiles,
+        "skills": skills,
+        "mcp_servers": mcps,
+        "openclaw_guide": summarize_openclaw_basics(),
         "max_history": manager_config.get("max_history", -1),
         "openclaw_dir": str(OPENCLAW_DIR),
         "gui_available": is_gui_available(),
@@ -1072,20 +1449,325 @@ async def api_models(request: Request) -> Dict[str, Any]:
     return {"status": "success", "models": load_model_catalog()}
 
 
+@app.post("/api/models/sync")
+async def api_models_sync(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    models = sync_model_catalog_snapshot()
+    return {
+        "status": "success",
+        "message": f"synced {len(models)} models",
+        "models": models,
+    }
+
+
+@app.get("/api/openclaw-guide")
+async def api_openclaw_guide(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    return {"status": "success", "guide": summarize_openclaw_basics()}
+
+
+@app.post("/api/models/custom")
+async def api_add_custom_model(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    payload = await parse_payload(request)
+    model = normalize_text(payload.get("model"))
+    if not model:
+        raise HTTPException(status_code=400, detail="model cannot be empty")
+    provider = normalize_text(payload.get("provider"), "Custom")
+    label = normalize_text(payload.get("label"), model)
+
+    raw = read_json_file(MODEL_CATALOG_FILE, {"models": []})
+    models = raw.get("models", []) if isinstance(raw, dict) else []
+    if not isinstance(models, list):
+        models = []
+    if any(normalize_text(item.get("model")).lower() == model.lower() for item in models if isinstance(item, dict)):
+        raise HTTPException(status_code=409, detail="model already exists")
+    models.append({"provider": provider, "model": model, "label": label})
+    write_json_file(MODEL_CATALOG_FILE, {"models": models})
+    return {"status": "success", "models": load_model_catalog()}
+
+
+@app.get("/api/channels")
+async def api_channels(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    return {"status": "success", "channels": load_channels()}
+
+
+@app.post("/api/channels")
+async def api_create_channel(request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    channels = load_channels()
+    item = normalize_channel_item(
+        {
+            "id": normalize_text(payload.get("id"), make_object_id("channel")),
+            "name": payload.get("name"),
+            "entry": payload.get("entry"),
+            "description": payload.get("description"),
+            "enabled": payload.get("enabled", True),
+        }
+    )
+    if any(normalize_text(x.get("id")) == item["id"] for x in channels):
+        raise HTTPException(status_code=409, detail="channel id already exists")
+    if any(normalize_text(x.get("entry")) == item["entry"] for x in channels):
+        raise HTTPException(status_code=409, detail="channel entry already exists")
+    backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=f"create channel {item['id']}",
+        created_by=user["username"],
+    )
+    channels.append(item)
+    save_channels(channels)
+    return {"status": "success", "channel": item, "channels": load_channels()}
+
+
+@app.patch("/api/channels/{channel_id}")
+async def api_update_channel(channel_id: str, request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    channels = load_channels()
+    target = next((x for x in channels if normalize_text(x.get("id")) == channel_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="channel not found")
+    if "name" in payload:
+        target["name"] = normalize_text(payload.get("name"), target.get("name", "channel"))
+    if "entry" in payload:
+        entry = normalize_text(payload.get("entry"))
+        if not entry:
+            raise HTTPException(status_code=400, detail="entry cannot be empty")
+        if any(normalize_text(x.get("entry")) == entry and normalize_text(x.get("id")) != channel_id for x in channels):
+            raise HTTPException(status_code=409, detail="channel entry already exists")
+        target["entry"] = entry
+    if "description" in payload:
+        target["description"] = normalize_text(payload.get("description"))
+    if "enabled" in payload:
+        target["enabled"] = bool(payload.get("enabled"))
+    target["updated_at"] = now_iso()
+    backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=f"update channel {channel_id}",
+        created_by=user["username"],
+    )
+    save_channels(channels)
+    return {"status": "success", "channel": target, "channels": load_channels()}
+
+
+@app.get("/api/model-profiles")
+async def api_model_profiles(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    return {"status": "success", "model_profiles": load_model_profiles()}
+
+
+@app.post("/api/model-profiles")
+async def api_create_model_profile(request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    profiles = load_model_profiles()
+    item = normalize_model_profile_item(
+        {
+            "id": normalize_text(payload.get("id"), make_object_id("model_profile")),
+            "name": payload.get("name"),
+            "provider": payload.get("provider"),
+            "model": payload.get("model"),
+            "auth_mode": payload.get("auth_mode"),
+            "auth_profile": payload.get("auth_profile"),
+            "auth_value": payload.get("auth_value"),
+            "base_url": payload.get("base_url"),
+            "enabled": payload.get("enabled", True),
+        }
+    )
+    if any(normalize_text(x.get("id")) == item["id"] for x in profiles):
+        raise HTTPException(status_code=409, detail="model profile id already exists")
+    backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=f"create model profile {item['id']}",
+        created_by=user["username"],
+    )
+    profiles.append(item)
+    save_model_profiles(profiles)
+    return {"status": "success", "model_profile": item, "model_profiles": load_model_profiles()}
+
+
+@app.patch("/api/model-profiles/{profile_id}")
+async def api_update_model_profile(profile_id: str, request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    profiles = load_model_profiles()
+    target = next((x for x in profiles if normalize_text(x.get("id")) == profile_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="model profile not found")
+    for key in ("name", "provider", "model", "auth_mode", "auth_profile", "auth_value", "base_url"):
+        if key in payload:
+            target[key] = normalize_text(payload.get(key), target.get(key, ""))
+    if "enabled" in payload:
+        target["enabled"] = bool(payload.get("enabled"))
+    target["updated_at"] = now_iso()
+    backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=f"update model profile {profile_id}",
+        created_by=user["username"],
+    )
+    save_model_profiles(profiles)
+    return {"status": "success", "model_profile": target, "model_profiles": load_model_profiles()}
+
+
+@app.get("/api/skills")
+async def api_skills(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    return {"status": "success", "skills": load_skills()}
+
+
+@app.post("/api/skills")
+async def api_create_skill(request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    skills = load_skills()
+    item = normalize_skill_item(
+        {
+            "id": normalize_text(payload.get("id"), make_object_id("skill")),
+            "name": payload.get("name"),
+            "description": payload.get("description"),
+            "entry": payload.get("entry"),
+            "enabled": payload.get("enabled", True),
+        }
+    )
+    if any(normalize_text(x.get("id")) == item["id"] for x in skills):
+        raise HTTPException(status_code=409, detail="skill id already exists")
+    backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=f"create skill {item['id']}",
+        created_by=user["username"],
+    )
+    skills.append(item)
+    save_skills(skills)
+    return {"status": "success", "skill": item, "skills": load_skills()}
+
+
+@app.patch("/api/skills/{skill_id}")
+async def api_update_skill(skill_id: str, request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    skills = load_skills()
+    target = next((x for x in skills if normalize_text(x.get("id")) == skill_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="skill not found")
+    for key in ("name", "description", "entry"):
+        if key in payload:
+            target[key] = normalize_text(payload.get(key), target.get(key, ""))
+    if "enabled" in payload:
+        target["enabled"] = bool(payload.get("enabled"))
+    target["updated_at"] = now_iso()
+    backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=f"update skill {skill_id}",
+        created_by=user["username"],
+    )
+    save_skills(skills)
+    return {"status": "success", "skill": target, "skills": load_skills()}
+
+
+@app.get("/api/mcp-servers")
+async def api_mcp_servers(request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    return {"status": "success", "mcp_servers": load_mcp_servers()}
+
+
+@app.post("/api/mcp-servers")
+async def api_create_mcp_server(request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    servers = load_mcp_servers()
+    item = normalize_mcp_item(
+        {
+            "id": normalize_text(payload.get("id"), make_object_id("mcp")),
+            "name": payload.get("name"),
+            "transport": payload.get("transport"),
+            "url": payload.get("url"),
+            "command": payload.get("command"),
+            "args": payload.get("args"),
+            "env_json": payload.get("env_json"),
+            "enabled": payload.get("enabled", True),
+        }
+    )
+    if any(normalize_text(x.get("id")) == item["id"] for x in servers):
+        raise HTTPException(status_code=409, detail="mcp id already exists")
+    backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=f"create mcp {item['id']}",
+        created_by=user["username"],
+    )
+    servers.append(item)
+    save_mcp_servers(servers)
+    return {"status": "success", "mcp_server": item, "mcp_servers": load_mcp_servers()}
+
+
+@app.patch("/api/mcp-servers/{mcp_id}")
+async def api_update_mcp_server(mcp_id: str, request: Request) -> Dict[str, Any]:
+    user = require_api_user(request)
+    payload = await parse_payload(request)
+    servers = load_mcp_servers()
+    target = next((x for x in servers if normalize_text(x.get("id")) == mcp_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="mcp server not found")
+    for key in ("name", "transport", "url", "command", "env_json"):
+        if key in payload:
+            target[key] = normalize_text(payload.get(key), target.get(key, ""))
+    if "args" in payload:
+        target["args"] = normalize_id_list(payload.get("args"))
+    if "enabled" in payload:
+        target["enabled"] = bool(payload.get("enabled"))
+    target["updated_at"] = now_iso()
+    backup_current_config(
+        version_label=normalize_text(payload.get("version")) or None,
+        note=f"update mcp {mcp_id}",
+        created_by=user["username"],
+    )
+    save_mcp_servers(servers)
+    return {"status": "success", "mcp_server": target, "mcp_servers": load_mcp_servers()}
+
+
 @app.post("/api/agents")
 async def create_agent(request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
     payload = await parse_payload(request)
 
     agent_id = normalize_text(payload.get("id"))
+    model_profile_id = normalize_text(payload.get("model_profile_id"))
+    channel_ids = normalize_id_list(payload.get("channel_ids"))
+    skill_ids = normalize_id_list(payload.get("skill_ids"))
+    mcp_ids = normalize_id_list(payload.get("mcp_ids"))
+    default_channel_id = normalize_text(payload.get("default_channel_id"))
     model = normalize_text(payload.get("model"))
     model_name = normalize_text(payload.get("model_name"), model)
     model_provider = normalize_text(payload.get("model_provider"), "Custom")
-    chat_entry = normalize_text(payload.get("chat_entry"), "default")
-    chat_name = normalize_text(payload.get("chat_name"), chat_entry)
+    chat_entry = normalize_text(payload.get("chat_entry"))
+    chat_name = normalize_text(payload.get("chat_name"), chat_entry or "default")
     auth_type = normalize_text(payload.get("auth_type"), "token").lower()
     token_or_pass = normalize_text(payload.get("token_or_pass"))
     version_label = normalize_text(payload.get("version"))
+
+    profiles = {item["id"]: item for item in load_model_profiles() if item.get("enabled", True)}
+    channels = {item["id"]: item for item in load_channels() if item.get("enabled", True)}
+
+    if model_profile_id and model_profile_id in profiles:
+        profile = profiles[model_profile_id]
+        model = normalize_text(profile.get("model"), model)
+        model_name = normalize_text(profile.get("name"), model_name or model)
+        model_provider = normalize_text(profile.get("provider"), model_provider)
+
+    valid_channel_ids = [cid for cid in channel_ids if cid in channels]
+    if valid_channel_ids:
+        channel_ids = valid_channel_ids
+    if not channel_ids and channels:
+        channel_ids = [next(iter(channels.keys()))]
+    if channel_ids:
+        if default_channel_id not in channel_ids:
+            default_channel_id = channel_ids[0]
+        chat_entry = normalize_text(chat_entry, channels[default_channel_id].get("entry", "default"))
+        chat_name = normalize_text(chat_name, channels[default_channel_id].get("name", chat_entry))
+    else:
+        chat_entry = normalize_text(chat_entry, "default")
+        chat_name = normalize_text(chat_name, chat_entry)
 
     if not AGENT_ID_RE.fullmatch(agent_id):
         raise HTTPException(status_code=400, detail="Agent ID 仅支持字母数字、_、-，长度 2-40")
@@ -1132,6 +1814,11 @@ async def create_agent(request: Request) -> Dict[str, Any]:
             ],
             "default_model_id": model_id,
             "default_chat_id": chat_id,
+            "model_profile_id": model_profile_id,
+            "channel_ids": channel_ids,
+            "default_channel_id": default_channel_id,
+            "skill_ids": skill_ids,
+            "mcp_ids": mcp_ids,
             "created_at": timestamp,
             "updated_at": timestamp,
             "created_by": user["username"],
@@ -1172,6 +1859,10 @@ async def api_update_agent(agent_id: str, request: Request) -> Dict[str, Any]:
     payload = await parse_payload(request)
     agent_dir = get_agent_dir_or_404(agent_id)
     current = read_agent_config(agent_dir)
+    profiles = {item["id"]: item for item in load_model_profiles()}
+    channels = {item["id"]: item for item in load_channels()}
+    skills = {item["id"]: item for item in load_skills()}
+    mcps = {item["id"]: item for item in load_mcp_servers()}
 
     if "auth_type" in payload:
         auth_type = normalize_text(payload.get("auth_type"), current.get("auth_type", "token")).lower()
@@ -1194,6 +1885,42 @@ async def api_update_agent(agent_id: str, request: Request) -> Dict[str, Any]:
         if wanted not in chat_ids:
             raise HTTPException(status_code=400, detail="default_chat_id 不存在")
         current["default_chat_id"] = wanted
+
+    if "model_profile_id" in payload:
+        model_profile_id = normalize_text(payload.get("model_profile_id"))
+        if model_profile_id and model_profile_id not in profiles:
+            raise HTTPException(status_code=400, detail="model_profile_id not found")
+        current["model_profile_id"] = model_profile_id
+
+    if "channel_ids" in payload:
+        channel_ids = normalize_id_list(payload.get("channel_ids"))
+        for channel_id in channel_ids:
+            if channel_id not in channels:
+                raise HTTPException(status_code=400, detail=f"channel_id not found: {channel_id}")
+        current["channel_ids"] = channel_ids
+        if channel_ids and normalize_text(current.get("default_channel_id")) not in channel_ids:
+            current["default_channel_id"] = channel_ids[0]
+
+    if "default_channel_id" in payload:
+        default_channel_id = normalize_text(payload.get("default_channel_id"))
+        channel_ids = normalize_id_list(current.get("channel_ids"))
+        if default_channel_id and default_channel_id not in channel_ids:
+            raise HTTPException(status_code=400, detail="default_channel_id not found in channel_ids")
+        current["default_channel_id"] = default_channel_id
+
+    if "skill_ids" in payload:
+        skill_ids = normalize_id_list(payload.get("skill_ids"))
+        for skill_id in skill_ids:
+            if skill_id not in skills:
+                raise HTTPException(status_code=400, detail=f"skill_id not found: {skill_id}")
+        current["skill_ids"] = skill_ids
+
+    if "mcp_ids" in payload:
+        mcp_ids = normalize_id_list(payload.get("mcp_ids"))
+        for mcp_id in mcp_ids:
+            if mcp_id not in mcps:
+                raise HTTPException(status_code=400, detail=f"mcp_id not found: {mcp_id}")
+        current["mcp_ids"] = mcp_ids
 
     backup_version = backup_current_config(
         version_label=normalize_text(payload.get("version")) or None,
