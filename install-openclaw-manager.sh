@@ -137,6 +137,10 @@ fi
 cp "$SCRIPT_DIR/main.py" "$INSTALL_DIR/main.py"
 cp "$SCRIPT_DIR/auth_capture.py" "$INSTALL_DIR/auth_capture.py"
 cp "$SCRIPT_DIR/requirements.txt" "$INSTALL_DIR/requirements.txt" || true
+if [ -d "$SCRIPT_DIR/core" ]; then
+  mkdir -p "$INSTALL_DIR/core"
+  cp -R "$SCRIPT_DIR/core/." "$INSTALL_DIR/core/"
+fi
 mkdir -p "$INSTALL_DIR/templates"
 cp "$SCRIPT_DIR/templates/index.html" "$INSTALL_DIR/templates/index.html"
 cp "$SCRIPT_DIR/templates/login.html" "$INSTALL_DIR/templates/login.html"

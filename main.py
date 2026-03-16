@@ -1,4 +1,4 @@
-import hashlib
+﻿import hashlib
 import hmac
 import json
 import os
@@ -15,6 +15,13 @@ from typing import Any, Dict, Optional
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import uvicorn
+from core.model_catalog import DEFAULT_MODEL_CATALOG
+from core.openclaw_discovery import (
+    discover_agent_hints,
+    discover_channel_hints,
+    discover_model_hints,
+    read_openclaw_config,
+)
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -32,7 +39,7 @@ BASE_DIR = Path(__file__).resolve().parent
 OPENCLAW_DIR = Path.home() / ".openclaw"
 AGENTS_DIR = OPENCLAW_DIR / "agents"
 
-# 项目本地持久化目录（用户、配置、历史）
+# é¡¹ç›®æœ¬åœ°æŒä¹…åŒ–ç›®å½•ï¼ˆç”¨æˆ·ã€é…ç½®ã€åŽ†å²ï¼‰
 DATA_DIR = BASE_DIR / "data"
 HISTORY_DIR = DATA_DIR / "history"
 CONFIG_FILE = DATA_DIR / "manager_config.json"
@@ -66,38 +73,6 @@ template_env = Environment(
     loader=FileSystemLoader(BASE_DIR / "templates"),
     autoescape=select_autoescape(["html", "xml"]),
 )
-
-DEFAULT_MODEL_CATALOG = [
-    {"provider": "OpenAI", "model": "gpt-5", "label": "GPT-5"},
-    {"provider": "OpenAI", "model": "gpt-5-mini", "label": "GPT-5 Mini"},
-    {"provider": "OpenAI", "model": "gpt-4.1", "label": "GPT-4.1"},
-    {"provider": "OpenAI", "model": "gpt-4o", "label": "GPT-4o"},
-    {"provider": "OpenAI", "model": "gpt-4o-mini", "label": "GPT-4o Mini"},
-    {"provider": "Anthropic", "model": "claude-3-7-sonnet-latest", "label": "Claude 3.7 Sonnet"},
-    {"provider": "Anthropic", "model": "claude-3-5-sonnet-latest", "label": "Claude 3.5 Sonnet"},
-    {"provider": "Anthropic", "model": "claude-3-5-haiku-latest", "label": "Claude 3.5 Haiku"},
-    {"provider": "Google", "model": "gemini-2.5-pro", "label": "Gemini 2.5 Pro"},
-    {"provider": "Google", "model": "gemini-2.5-flash", "label": "Gemini 2.5 Flash"},
-    {"provider": "Google", "model": "gemini-2.0-flash", "label": "Gemini 2.0 Flash"},
-    {"provider": "xAI", "model": "grok-3-beta", "label": "Grok 3"},
-    {"provider": "xAI", "model": "grok-2-latest", "label": "Grok 2"},
-    {"provider": "DeepSeek", "model": "deepseek-chat", "label": "DeepSeek Chat"},
-    {"provider": "DeepSeek", "model": "deepseek-reasoner", "label": "DeepSeek Reasoner"},
-    {"provider": "Qwen", "model": "qwen-max", "label": "Qwen Max"},
-    {"provider": "Qwen", "model": "qwen-plus", "label": "Qwen Plus"},
-    {"provider": "Qwen", "model": "qwen2.5:14b", "label": "Qwen2.5 14B"},
-    {"provider": "Qwen", "model": "qwen2.5:7b", "label": "Qwen2.5 7B"},
-    {"provider": "Mistral", "model": "mistral-large-latest", "label": "Mistral Large"},
-    {"provider": "Mistral", "model": "mistral-small-latest", "label": "Mistral Small"},
-    {"provider": "Meta", "model": "llama-3.3-70b-instruct", "label": "Llama 3.3 70B"},
-    {"provider": "Meta", "model": "llama-3.1-70b-instruct", "label": "Llama 3.1 70B"},
-    {"provider": "Meta", "model": "llama-3.1-8b-instruct", "label": "Llama 3.1 8B"},
-    {"provider": "OpenRouter", "model": "openrouter/auto", "label": "OpenRouter Auto"},
-    {"provider": "OpenRouter", "model": "anthropic/claude-3.5-sonnet", "label": "OR Claude 3.5 Sonnet"},
-    {"provider": "OpenRouter", "model": "openai/gpt-4o", "label": "OR GPT-4o"},
-    {"provider": "Local", "model": "ollama/llama3.1:8b", "label": "Ollama Llama3.1 8B"},
-    {"provider": "Local", "model": "ollama/qwen2.5:14b", "label": "Ollama Qwen2.5 14B"},
-]
 
 
 def now_iso() -> str:
@@ -175,75 +150,24 @@ def normalize_version_label(raw: Any, fallback_labels: list[str]) -> str:
         return next_semver_from(fallback_labels)
     text = text.strip()
     if not re.fullmatch(r"[A-Za-z0-9._-]{1,40}", text):
-        raise HTTPException(status_code=400, detail="版本号仅支持字母数字._-，长度 1-40")
+        raise HTTPException(status_code=400, detail="ç‰ˆæœ¬å·ä»…æ”¯æŒå­—æ¯æ•°å­—._-ï¼Œé•¿åº¦ 1-40")
     return text
 
 
+def load_openclaw_config() -> Dict[str, Any]:
+    return read_openclaw_config(OPENCLAW_DIR / "openclaw.json")
+
+
 def read_openclaw_model_hints() -> list[Dict[str, str]]:
-    rows: list[Dict[str, str]] = []
-    openclaw_json = OPENCLAW_DIR / "openclaw.json"
-    payload = read_json_file(openclaw_json, {})
-    if not isinstance(payload, dict):
-        return rows
+    return discover_model_hints(load_openclaw_config())
 
-    model_sections = []
-    for key in ("models", "model_providers", "providers"):
-        item = payload.get(key)
-        if item is not None:
-            model_sections.append(item)
 
-    for section in model_sections:
-        if isinstance(section, list):
-            for entry in section:
-                if isinstance(entry, dict):
-                    model = normalize_text(entry.get("model") or entry.get("id"))
-                    if model:
-                        rows.append(
-                            {
-                                "provider": normalize_text(entry.get("provider"), "OpenClaw"),
-                                "model": model,
-                                "label": normalize_text(entry.get("name"), model),
-                            }
-                        )
-        elif isinstance(section, dict):
-            for provider, entry in section.items():
-                provider_name = normalize_text(provider, "OpenClaw")
-                if isinstance(entry, list):
-                    for model in entry:
-                        model_name = normalize_text(model)
-                        if model_name:
-                            rows.append(
-                                {
-                                    "provider": provider_name,
-                                    "model": model_name,
-                                    "label": model_name,
-                                }
-                            )
-                elif isinstance(entry, dict):
-                    for model_key, model_value in entry.items():
-                        if isinstance(model_value, dict):
-                            model_name = normalize_text(
-                                model_value.get("model") or model_value.get("id") or model_key
-                            )
-                            if model_name:
-                                rows.append(
-                                    {
-                                        "provider": provider_name,
-                                        "model": model_name,
-                                        "label": normalize_text(model_value.get("name"), model_name),
-                                    }
-                                )
-                        else:
-                            model_name = normalize_text(model_key)
-                            if model_name:
-                                rows.append(
-                                    {
-                                        "provider": provider_name,
-                                        "model": model_name,
-                                        "label": model_name,
-                                    }
-                                )
-    return rows
+def read_openclaw_channel_hints() -> list[Dict[str, Any]]:
+    return discover_channel_hints(load_openclaw_config())
+
+
+def read_openclaw_agent_hints() -> Dict[str, Dict[str, Any]]:
+    return discover_agent_hints(load_openclaw_config())
 
 
 def load_model_catalog() -> list[Dict[str, str]]:
@@ -262,12 +186,13 @@ def load_model_catalog() -> list[Dict[str, str]]:
                     "provider": normalize_text(item.get("provider"), "Custom"),
                     "model": model,
                     "label": normalize_text(item.get("label"), model),
+                    "source": normalize_text(item.get("source"), "manager"),
                 }
             )
 
-    # 支持通过环境变量追加模型：
+    # æ”¯æŒé€šè¿‡çŽ¯å¢ƒå˜é‡è¿½åŠ æ¨¡åž‹ï¼š
     # OPENCLAW_MODELS=provider::model,provider::model,plain-model
-    # 兼容 provider:model（provider 需已在已知提供方列表中）
+    # å…¼å®¹ provider:modelï¼ˆprovider éœ€å·²åœ¨å·²çŸ¥æä¾›æ–¹åˆ—è¡¨ä¸­ï¼‰
     extra_models = normalize_text(os.getenv("OPENCLAW_MODELS", ""))
     if extra_models:
         known_providers = {item["provider"].lower() for item in DEFAULT_MODEL_CATALOG}
@@ -282,6 +207,7 @@ def load_model_catalog() -> list[Dict[str, str]]:
                         "provider": normalize_text(provider, "Custom"),
                         "model": normalize_text(model, piece),
                         "label": normalize_text(model, piece),
+                        "source": "env",
                     }
                 )
             elif ":" in piece and "/" not in piece:
@@ -292,12 +218,13 @@ def load_model_catalog() -> list[Dict[str, str]]:
                             "provider": normalize_text(provider, "Custom"),
                             "model": normalize_text(model, piece),
                             "label": normalize_text(model, piece),
+                            "source": "env",
                         }
                     )
                 else:
-                    merged.append({"provider": "Custom", "model": piece, "label": piece})
+                    merged.append({"provider": "Custom", "model": piece, "label": piece, "source": "env"})
             else:
-                merged.append({"provider": "Custom", "model": piece, "label": piece})
+                merged.append({"provider": "Custom", "model": piece, "label": piece, "source": "env"})
 
     seen = set()
     rows: list[Dict[str, str]] = []
@@ -311,7 +238,8 @@ def load_model_catalog() -> list[Dict[str, str]]:
         if key in seen:
             continue
         seen.add(key)
-        rows.append({"provider": provider, "model": model, "label": label})
+        source = normalize_text(item.get("source"), "official")
+        rows.append({"provider": provider, "model": model, "label": label, "source": source})
 
     rows.sort(key=lambda x: (x["provider"].lower(), x["label"].lower()))
     return rows
@@ -327,6 +255,22 @@ def ensure_model_catalog_file() -> None:
     if MODEL_CATALOG_FILE.exists():
         return
     write_json_file(MODEL_CATALOG_FILE, {"models": []})
+
+
+def load_manual_model_catalog_items() -> list[Dict[str, Any]]:
+    raw = read_json_file(MODEL_CATALOG_FILE, {"models": []})
+    models = raw.get("models", []) if isinstance(raw, dict) else []
+    if not isinstance(models, list):
+        return []
+    rows: list[Dict[str, Any]] = []
+    for item in models:
+        if isinstance(item, dict):
+            rows.append(item)
+    return rows
+
+
+def save_manual_model_catalog_items(rows: list[Dict[str, Any]]) -> None:
+    write_json_file(MODEL_CATALOG_FILE, {"models": rows, "updated_at": now_iso()})
 
 
 def load_versions_index() -> list[Dict[str, Any]]:
@@ -385,7 +329,10 @@ def read_json_file(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        if text.startswith("\ufeff"):
+            text = text.lstrip("\ufeff")
+        return json.loads(text)
     except (json.JSONDecodeError, OSError):
         return default
 
@@ -427,36 +374,74 @@ def normalize_channel_item(item: Dict[str, Any]) -> Dict[str, Any]:
     channel_id = normalize_text(item.get("id"), make_object_id("channel"))
     entry = normalize_text(item.get("entry"), "default")
     name = normalize_text(item.get("name"), entry)
+    provider = normalize_text(item.get("provider"), "custom").lower()
+    telegram_allow_from = ",".join(normalize_id_list(item.get("telegram_allow_from")))
+    telegram_group_allow_from = ",".join(normalize_id_list(item.get("telegram_group_allow_from")))
     return {
         "id": channel_id,
         "name": name,
         "entry": entry,
+        "provider": provider,
         "description": normalize_text(item.get("description")),
+        "auth_json": normalize_text(item.get("auth_json")),
+        "settings_json": normalize_text(item.get("settings_json")),
+        "telegram_bot_token": normalize_text(item.get("telegram_bot_token")),
+        "telegram_dm_policy": normalize_text(item.get("telegram_dm_policy"), "all"),
+        "telegram_allow_from": telegram_allow_from,
+        "telegram_group_policy": normalize_text(item.get("telegram_group_policy"), "off"),
+        "telegram_group_allow_from": telegram_group_allow_from,
+        "telegram_require_mention": bool(item.get("telegram_require_mention", False)),
         "enabled": bool(item.get("enabled", True)),
+        "source": normalize_text(item.get("source"), "manager"),
         "created_at": normalize_text(item.get("created_at"), now),
         "updated_at": normalize_text(item.get("updated_at"), now),
     }
 
 
-def load_channels() -> list[Dict[str, Any]]:
+def load_local_channels() -> list[Dict[str, Any]]:
     payload = read_json_file(CHANNELS_FILE, {"channels": []})
     raw = payload.get("channels", []) if isinstance(payload, dict) else []
     rows: list[Dict[str, Any]] = []
     if isinstance(raw, list):
         for item in raw:
             if isinstance(item, dict):
-                rows.append(normalize_channel_item(item))
+                normalized = normalize_channel_item(item)
+                normalized["source"] = "manager"
+                rows.append(normalized)
     return rows
 
 
+def list_channels() -> list[Dict[str, Any]]:
+    rows = load_local_channels()
+    local_ids = {item["id"] for item in rows}
+    local_entries = {normalize_text(item.get("entry")).lower() for item in rows}
+    for hint in read_openclaw_channel_hints():
+        normalized = normalize_channel_item(hint)
+        if normalized["id"] in local_ids:
+            continue
+        if normalize_text(normalized.get("entry")).lower() in local_entries:
+            continue
+        normalized["source"] = "openclaw"
+        rows.append(normalized)
+    return rows
+
+
+def load_channels() -> list[Dict[str, Any]]:
+    return list_channels()
+
+
 def save_channels(rows: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
-    normalized = [normalize_channel_item(item) for item in rows]
+    normalized: list[Dict[str, Any]] = []
+    for item in rows:
+        row = normalize_channel_item(item)
+        row["source"] = "manager"
+        normalized.append(row)
     write_json_file(CHANNELS_FILE, {"channels": normalized})
     return normalized
 
 
 def ensure_default_channels() -> None:
-    channels = load_channels()
+    channels = load_local_channels()
     if channels:
         return
     save_channels(
@@ -465,6 +450,7 @@ def ensure_default_channels() -> None:
                 "id": "channel_default",
                 "name": "Default Channel",
                 "entry": "default",
+                "provider": "custom",
                 "description": "Default chat entry",
                 "enabled": True,
             }
@@ -609,9 +595,10 @@ def usage_counter(agents: list[Dict[str, Any]], key: str) -> Dict[str, int]:
         values = normalize_id_list(agent.get(key))
         for value in values:
             counter[value] = counter.get(value, 0) + 1
-        single = normalize_text(agent.get(key.replace("_ids", "_id")))
-        if single:
-            counter[single] = counter.get(single, 0) + 1
+        if key.endswith("_ids"):
+            single = normalize_text(agent.get(key.replace("_ids", "_id")))
+            if single:
+                counter[single] = counter.get(single, 0) + 1
     return counter
 
 
@@ -619,26 +606,35 @@ def summarize_openclaw_basics() -> Dict[str, Any]:
     return {
         "agent_core_required": [
             "id",
+            "agents.list",
+            "agents.bindings",
             "model",
-            "auth_type",
-            "token_or_pass",
-            "chat_entry",
+            "chat entry",
         ],
         "agent_core_recommended": [
             "model_profile_id",
             "channel_ids",
             "skill_ids",
             "mcp_ids",
+            "auth profiles",
         ],
         "model_auth": {
             "shared_across_agents": True,
-            "reason": "Model auth can be centralized as shared auth profiles and reused by multiple agents.",
-            "suggested_fields": ["auth_mode", "auth_profile", "auth_value", "base_url"],
+            "reason": "OpenClaw supports shared auth profiles; the same model auth can be reused across agents.",
+            "suggested_fields": ["auth_mode", "auth_profile", "auth_value", "base_url", "provider"],
         },
         "channels_design": {
             "independent_management": True,
             "bind_on_agent": True,
             "multi_bind_supported": True,
+            "telegram_fields": [
+                "botToken",
+                "dmPolicy",
+                "allowFrom",
+                "groupPolicy",
+                "groupAllowFrom",
+                "groups.requireMention",
+            ],
         },
     }
 
@@ -801,7 +797,7 @@ def get_current_user(request: Request) -> Optional[Dict[str, Any]]:
 def require_api_user(request: Request) -> Dict[str, Any]:
     user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="未登录或会话已过期")
+        raise HTTPException(status_code=401, detail="æœªç™»å½•æˆ–ä¼šè¯å·²è¿‡æœŸ")
     return user
 
 
@@ -933,12 +929,12 @@ def backup_current_config(
     existing_labels = [item["version"] for item in versions]
     version = normalize_version_label(version_label, existing_labels)
     if version in existing_labels:
-        raise HTTPException(status_code=409, detail=f"版本 {version} 已存在")
+        raise HTTPException(status_code=409, detail=f"ç‰ˆæœ¬ {version} å·²å­˜åœ¨")
 
     folder = version
     backup_path = HISTORY_DIR / folder
     if backup_path.exists():
-        raise HTTPException(status_code=409, detail=f"备份目录 {folder} 已存在")
+        raise HTTPException(status_code=409, detail=f"å¤‡ä»½ç›®å½• {folder} å·²å­˜åœ¨")
     backup_path.mkdir(parents=True, exist_ok=True)
 
     openclaw_json = OPENCLAW_DIR / "openclaw.json"
@@ -1207,13 +1203,7 @@ def sync_agent_bindings(agent_payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def list_agents() -> list[Dict[str, Any]]:
     rows: list[Dict[str, Any]] = []
-    if not AGENTS_DIR.exists():
-        return rows
-
-    for agent_dir in sorted(AGENTS_DIR.iterdir(), key=lambda p: p.name.lower()):
-        if not agent_dir.is_dir():
-            continue
-        payload = read_agent_config(agent_dir)
+    for payload in list_agent_details():
         default_chat = next(
             (chat for chat in payload.get("chats", []) if chat.get("id") == payload.get("default_chat_id")),
             None,
@@ -1224,7 +1214,7 @@ def list_agents() -> list[Dict[str, Any]]:
         )
         rows.append(
             {
-                "id": agent_dir.name,
+                "id": normalize_text(payload.get("id")),
                 "model": (default_model or {}).get("model", payload.get("model", "-")),
                 "chat_entry": (default_chat or {}).get("entry", payload.get("chat_entry", "default")),
                 "auth_type": payload.get("auth_type", "-"),
@@ -1235,28 +1225,142 @@ def list_agents() -> list[Dict[str, Any]]:
                 "channel_count": len(normalize_id_list(payload.get("channel_ids"))),
                 "skill_count": len(normalize_id_list(payload.get("skill_ids"))),
                 "mcp_count": len(normalize_id_list(payload.get("mcp_ids"))),
+                "source": normalize_text(payload.get("source"), "manager"),
             }
         )
     return rows
 
 
+def build_agent_from_hint(agent_id: str, hint: Dict[str, Any]) -> Dict[str, Any]:
+    now = now_iso()
+    model_catalog = load_model_catalog()
+    fallback_model = normalize_text(
+        hint.get("model"),
+        normalize_text((model_catalog[0] if model_catalog else {}).get("model"), "gpt-4o-mini"),
+    )
+    fallback_provider = normalize_text(hint.get("provider"), "OpenClaw")
+    fallback_entry = normalize_text(hint.get("chat_entry"), "default")
+
+    channels_by_entry = {
+        normalize_text(item.get("entry")).lower(): normalize_text(item.get("id"))
+        for item in load_channels()
+    }
+    channel_ids = normalize_id_list(hint.get("channel_ids"))
+    for entry in normalize_id_list(hint.get("channel_entries")):
+        mapped = channels_by_entry.get(entry.lower())
+        if mapped:
+            channel_ids.append(mapped)
+    if not channel_ids and fallback_entry.lower() in channels_by_entry:
+        channel_ids.append(channels_by_entry[fallback_entry.lower()])
+    channel_ids = list(dict.fromkeys(channel_ids))
+
+    model_id = f"hint_model_{agent_id}"
+    chat_id = f"hint_chat_{agent_id}"
+    payload = {
+        "id": agent_id,
+        "auth_type": normalize_text(hint.get("auth_type"), "token"),
+        "token_or_pass": normalize_text(hint.get("token_or_pass")),
+        "models": [
+            {
+                "id": model_id,
+                "name": fallback_model,
+                "provider": fallback_provider,
+                "model": fallback_model,
+            }
+        ],
+        "chats": [
+            {
+                "id": chat_id,
+                "name": fallback_entry,
+                "entry": fallback_entry,
+                "model_id": model_id,
+            }
+        ],
+        "default_model_id": model_id,
+        "default_chat_id": chat_id,
+        "model_profile_id": normalize_text(hint.get("model_profile_id")),
+        "channel_ids": channel_ids,
+        "default_channel_id": channel_ids[0] if channel_ids else "",
+        "skill_ids": normalize_id_list(hint.get("skill_ids")),
+        "mcp_ids": normalize_id_list(hint.get("mcp_ids")),
+        "created_at": normalize_text(hint.get("created_at"), now),
+        "updated_at": normalize_text(hint.get("updated_at"), now),
+        "created_by": "openclaw",
+        "source": "openclaw",
+    }
+    normalized = sync_agent_bindings(normalize_agent_config(agent_id, payload))
+    normalized["source"] = "openclaw"
+    return normalized
+
+
 def list_agent_details() -> list[Dict[str, Any]]:
-    rows: list[Dict[str, Any]] = []
-    if not AGENTS_DIR.exists():
-        return rows
-    for agent_dir in sorted(AGENTS_DIR.iterdir(), key=lambda p: p.name.lower()):
-        if not agent_dir.is_dir():
+    by_id: Dict[str, Dict[str, Any]] = {}
+    if AGENTS_DIR.exists():
+        for agent_dir in sorted(AGENTS_DIR.iterdir(), key=lambda p: p.name.lower()):
+            if not agent_dir.is_dir():
+                continue
+            payload = read_agent_config(agent_dir)
+            payload["source"] = "manager"
+            by_id[agent_dir.name] = payload
+
+    for agent_id, hint in read_openclaw_agent_hints().items():
+        external = build_agent_from_hint(agent_id, hint)
+        current = by_id.get(agent_id)
+        if not current:
+            by_id[agent_id] = external
             continue
-        rows.append(read_agent_config(agent_dir))
-    return rows
+
+        merged = dict(current)
+        for list_key in ("channel_ids", "skill_ids", "mcp_ids"):
+            merged[list_key] = list(
+                dict.fromkeys(normalize_id_list(merged.get(list_key)) + normalize_id_list(external.get(list_key)))
+            )
+        if not normalize_text(merged.get("model_profile_id")):
+            merged["model_profile_id"] = normalize_text(external.get("model_profile_id"))
+        if not normalize_text(merged.get("chat_entry")):
+            merged["chat_entry"] = normalize_text(external.get("chat_entry"))
+        merged["source"] = "manager+openclaw"
+        by_id[agent_id] = sync_agent_bindings(normalize_agent_config(agent_id, merged))
+        by_id[agent_id]["source"] = "manager+openclaw"
+
+    return sorted(by_id.values(), key=lambda x: normalize_text(x.get("id")).lower())
 
 
 def get_agent_dir_or_404(agent_id: str) -> Path:
     if not AGENT_ID_RE.fullmatch(agent_id):
-        raise HTTPException(status_code=400, detail="非法 Agent ID")
+        raise HTTPException(status_code=400, detail="éžæ³• Agent ID")
     agent_dir = AGENTS_DIR / agent_id
     if not agent_dir.exists() or not agent_dir.is_dir():
-        raise HTTPException(status_code=404, detail="Agent 不存在")
+        raise HTTPException(status_code=404, detail="Agent ä¸å­˜åœ¨")
+    return agent_dir
+
+
+def get_agent_or_404(agent_id: str) -> Dict[str, Any]:
+    if not AGENT_ID_RE.fullmatch(agent_id):
+        raise HTTPException(status_code=400, detail="invalid agent id")
+    agent_dir = AGENTS_DIR / agent_id
+    if agent_dir.exists() and agent_dir.is_dir():
+        payload = read_agent_config(agent_dir)
+        payload["source"] = "manager"
+        return payload
+    hint = read_openclaw_agent_hints().get(agent_id)
+    if hint:
+        return build_agent_from_hint(agent_id, hint)
+    raise HTTPException(status_code=404, detail="agent not found")
+
+
+def ensure_agent_dir_for_update(agent_id: str) -> Path:
+    if not AGENT_ID_RE.fullmatch(agent_id):
+        raise HTTPException(status_code=400, detail="invalid agent id")
+    agent_dir = AGENTS_DIR / agent_id
+    if agent_dir.exists() and agent_dir.is_dir():
+        return agent_dir
+    hint = read_openclaw_agent_hints().get(agent_id)
+    if not hint:
+        raise HTTPException(status_code=404, detail="agent not found")
+    agent_dir.mkdir(parents=True, exist_ok=False)
+    seeded = build_agent_from_hint(agent_id, hint)
+    save_agent_config(agent_dir, seeded)
     return agent_dir
 
 
@@ -1276,9 +1380,9 @@ def restart_gateway() -> Dict[str, Any]:
             "stderr": (result.stderr or "").strip()[:300],
         }
     except FileNotFoundError:
-        return {"ok": False, "code": -1, "stderr": "未找到 openclaw 命令"}
+        return {"ok": False, "code": -1, "stderr": "æœªæ‰¾åˆ° openclaw å‘½ä»¤"}
     except subprocess.TimeoutExpired:
-        return {"ok": False, "code": -1, "stderr": "重启 Gateway 超时"}
+        return {"ok": False, "code": -1, "stderr": "é‡å¯ Gateway è¶…æ—¶"}
 
 
 def safe_backup_path(version: str) -> Optional[Path]:
@@ -1310,7 +1414,7 @@ async def parse_payload(request: Request) -> Dict[str, Any]:
         return {}
 
 
-# 初始化目录和配置
+# åˆå§‹åŒ–ç›®å½•å’Œé…ç½®
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 AGENTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1348,7 +1452,7 @@ async def api_login(request: Request) -> JSONResponse:
     users = load_users()
     record = users.get(username)
     if not record or not verify_password(password, record.get("password_hash", "")):
-        raise HTTPException(status_code=401, detail="用户名或密码错误")
+        raise HTTPException(status_code=401, detail="ç”¨æˆ·åæˆ–å¯†ç é”™è¯¯")
 
     token = create_session(username)
     resp = JSONResponse(
@@ -1405,7 +1509,7 @@ async def api_state(request: Request) -> Dict[str, Any]:
     channel_usage = usage_counter(agent_details, "channel_ids")
     skill_usage = usage_counter(agent_details, "skill_ids")
     mcp_usage = usage_counter(agent_details, "mcp_ids")
-    profile_usage = usage_counter(agent_details, "model_profile_ids")
+    profile_usage = usage_counter(agent_details, "model_profile_id")
 
     channels = load_channels()
     for item in channels:
@@ -1476,14 +1580,63 @@ async def api_add_custom_model(request: Request) -> Dict[str, Any]:
     provider = normalize_text(payload.get("provider"), "Custom")
     label = normalize_text(payload.get("label"), model)
 
-    raw = read_json_file(MODEL_CATALOG_FILE, {"models": []})
-    models = raw.get("models", []) if isinstance(raw, dict) else []
-    if not isinstance(models, list):
-        models = []
-    if any(normalize_text(item.get("model")).lower() == model.lower() for item in models if isinstance(item, dict)):
+    models = load_manual_model_catalog_items()
+    if any(normalize_text(item.get("model")).lower() == model.lower() for item in load_model_catalog()):
         raise HTTPException(status_code=409, detail="model already exists")
-    models.append({"provider": provider, "model": model, "label": label})
-    write_json_file(MODEL_CATALOG_FILE, {"models": models})
+    models.append({"provider": provider, "model": model, "label": label, "source": "manager"})
+    save_manual_model_catalog_items(models)
+    return {"status": "success", "models": load_model_catalog()}
+
+
+@app.patch("/api/models/{model_name:path}")
+async def api_update_model(model_name: str, request: Request) -> Dict[str, Any]:
+    require_api_user(request)
+    payload = await parse_payload(request)
+    target_model = normalize_text(model_name)
+    if not target_model:
+        raise HTTPException(status_code=400, detail="model cannot be empty")
+
+    provider = normalize_text(payload.get("provider"))
+    label = normalize_text(payload.get("label"))
+    renamed_model = normalize_text(payload.get("model"), target_model)
+    if renamed_model.lower() != target_model.lower():
+        existing = any(
+            normalize_text(item.get("model")).lower() == renamed_model.lower() for item in load_model_catalog()
+        )
+        if existing:
+            raise HTTPException(status_code=409, detail="target model already exists")
+
+    manual = load_manual_model_catalog_items()
+    idx = next(
+        (
+            i
+            for i, item in enumerate(manual)
+            if isinstance(item, dict) and normalize_text(item.get("model")).lower() == target_model.lower()
+        ),
+        -1,
+    )
+
+    if idx == -1:
+        merged = next((m for m in load_model_catalog() if normalize_text(m.get("model")).lower() == target_model.lower()), None)
+        if not merged:
+            raise HTTPException(status_code=404, detail="model not found")
+        manual.append(
+            {
+                "provider": provider or normalize_text(merged.get("provider"), "Custom"),
+                "model": renamed_model,
+                "label": label or normalize_text(merged.get("label"), renamed_model),
+                "source": "manager",
+            }
+        )
+    else:
+        item = manual[idx]
+        item["provider"] = provider or normalize_text(item.get("provider"), "Custom")
+        item["label"] = label or normalize_text(item.get("label"), renamed_model)
+        item["model"] = renamed_model
+        item["source"] = "manager"
+        manual[idx] = item
+
+    save_manual_model_catalog_items(manual)
     return {"status": "success", "models": load_model_catalog()}
 
 
@@ -1497,19 +1650,29 @@ async def api_channels(request: Request) -> Dict[str, Any]:
 async def api_create_channel(request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
     payload = await parse_payload(request)
-    channels = load_channels()
+    channels = load_local_channels()
+    existing = list_channels()
     item = normalize_channel_item(
         {
             "id": normalize_text(payload.get("id"), make_object_id("channel")),
             "name": payload.get("name"),
             "entry": payload.get("entry"),
+            "provider": payload.get("provider"),
             "description": payload.get("description"),
+            "auth_json": payload.get("auth_json"),
+            "settings_json": payload.get("settings_json"),
+            "telegram_bot_token": payload.get("telegram_bot_token"),
+            "telegram_dm_policy": payload.get("telegram_dm_policy"),
+            "telegram_allow_from": payload.get("telegram_allow_from"),
+            "telegram_group_policy": payload.get("telegram_group_policy"),
+            "telegram_group_allow_from": payload.get("telegram_group_allow_from"),
+            "telegram_require_mention": payload.get("telegram_require_mention"),
             "enabled": payload.get("enabled", True),
         }
     )
-    if any(normalize_text(x.get("id")) == item["id"] for x in channels):
+    if any(normalize_text(x.get("id")) == item["id"] for x in existing):
         raise HTTPException(status_code=409, detail="channel id already exists")
-    if any(normalize_text(x.get("entry")) == item["entry"] for x in channels):
+    if any(normalize_text(x.get("entry")) == item["entry"] for x in existing):
         raise HTTPException(status_code=409, detail="channel entry already exists")
     backup_current_config(
         version_label=normalize_text(payload.get("version")) or None,
@@ -1525,8 +1688,14 @@ async def api_create_channel(request: Request) -> Dict[str, Any]:
 async def api_update_channel(channel_id: str, request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
     payload = await parse_payload(request)
-    channels = load_channels()
+    channels = load_local_channels()
     target = next((x for x in channels if normalize_text(x.get("id")) == channel_id), None)
+    if not target:
+        hinted = next((x for x in list_channels() if normalize_text(x.get("id")) == channel_id), None)
+        if hinted:
+            target = normalize_channel_item(hinted)
+            target["source"] = "manager"
+            channels.append(target)
     if not target:
         raise HTTPException(status_code=404, detail="channel not found")
     if "name" in payload:
@@ -1535,11 +1704,32 @@ async def api_update_channel(channel_id: str, request: Request) -> Dict[str, Any
         entry = normalize_text(payload.get("entry"))
         if not entry:
             raise HTTPException(status_code=400, detail="entry cannot be empty")
-        if any(normalize_text(x.get("entry")) == entry and normalize_text(x.get("id")) != channel_id for x in channels):
+        if any(
+            normalize_text(x.get("entry")) == entry and normalize_text(x.get("id")) != channel_id
+            for x in list_channels()
+        ):
             raise HTTPException(status_code=409, detail="channel entry already exists")
         target["entry"] = entry
+    if "provider" in payload:
+        target["provider"] = normalize_text(payload.get("provider"), target.get("provider", "custom"))
     if "description" in payload:
         target["description"] = normalize_text(payload.get("description"))
+    if "auth_json" in payload:
+        target["auth_json"] = normalize_text(payload.get("auth_json"))
+    if "settings_json" in payload:
+        target["settings_json"] = normalize_text(payload.get("settings_json"))
+    if "telegram_bot_token" in payload:
+        target["telegram_bot_token"] = normalize_text(payload.get("telegram_bot_token"))
+    if "telegram_dm_policy" in payload:
+        target["telegram_dm_policy"] = normalize_text(payload.get("telegram_dm_policy"), "all")
+    if "telegram_allow_from" in payload:
+        target["telegram_allow_from"] = ",".join(normalize_id_list(payload.get("telegram_allow_from")))
+    if "telegram_group_policy" in payload:
+        target["telegram_group_policy"] = normalize_text(payload.get("telegram_group_policy"), "off")
+    if "telegram_group_allow_from" in payload:
+        target["telegram_group_allow_from"] = ",".join(normalize_id_list(payload.get("telegram_group_allow_from")))
+    if "telegram_require_mention" in payload:
+        target["telegram_require_mention"] = bool(payload.get("telegram_require_mention"))
     if "enabled" in payload:
         target["enabled"] = bool(payload.get("enabled"))
     target["updated_at"] = now_iso()
@@ -1770,15 +1960,15 @@ async def create_agent(request: Request) -> Dict[str, Any]:
         chat_name = normalize_text(chat_name, chat_entry)
 
     if not AGENT_ID_RE.fullmatch(agent_id):
-        raise HTTPException(status_code=400, detail="Agent ID 仅支持字母数字、_、-，长度 2-40")
+        raise HTTPException(status_code=400, detail="Agent ID ä»…æ”¯æŒå­—æ¯æ•°å­—ã€_ã€-ï¼Œé•¿åº¦ 2-40")
     if not model:
-        raise HTTPException(status_code=400, detail="模型不能为空")
+        raise HTTPException(status_code=400, detail="æ¨¡åž‹ä¸èƒ½ä¸ºç©º")
     if auth_type not in {"token", "password"}:
-        raise HTTPException(status_code=400, detail="auth_type 仅支持 token 或 password")
+        raise HTTPException(status_code=400, detail="auth_type ä»…æ”¯æŒ token æˆ– password")
 
     agent_dir = AGENTS_DIR / agent_id
-    if agent_dir.exists():
-        raise HTTPException(status_code=409, detail="Agent 已存在")
+    if agent_dir.exists() or any(item.get("id") == agent_id for item in list_agents()):
+        raise HTTPException(status_code=409, detail="Agent å·²å­˜åœ¨")
 
     backup_version = backup_current_config(
         version_label=version_label or None,
@@ -1828,7 +2018,7 @@ async def create_agent(request: Request) -> Dict[str, Any]:
     gateway = restart_gateway()
     return {
         "status": "success",
-        "message": f"Agent {agent_id} 创建完成",
+        "message": f"Agent {agent_id} åˆ›å»ºå®Œæˆ",
         "backup_version": backup_version,
         "agent": read_agent_config(agent_dir),
         "gateway": gateway,
@@ -1849,15 +2039,14 @@ async def api_agents(request: Request) -> Dict[str, Any]:
 @app.get("/api/agents/{agent_id}")
 async def api_agent_detail(agent_id: str, request: Request) -> Dict[str, Any]:
     require_api_user(request)
-    agent_dir = get_agent_dir_or_404(agent_id)
-    return {"status": "success", "agent": read_agent_config(agent_dir)}
+    return {"status": "success", "agent": get_agent_or_404(agent_id)}
 
 
 @app.patch("/api/agents/{agent_id}")
 async def api_update_agent(agent_id: str, request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
     payload = await parse_payload(request)
-    agent_dir = get_agent_dir_or_404(agent_id)
+    agent_dir = ensure_agent_dir_for_update(agent_id)
     current = read_agent_config(agent_dir)
     profiles = {item["id"]: item for item in load_model_profiles()}
     channels = {item["id"]: item for item in load_channels()}
@@ -1867,7 +2056,7 @@ async def api_update_agent(agent_id: str, request: Request) -> Dict[str, Any]:
     if "auth_type" in payload:
         auth_type = normalize_text(payload.get("auth_type"), current.get("auth_type", "token")).lower()
         if auth_type not in {"token", "password"}:
-            raise HTTPException(status_code=400, detail="auth_type 仅支持 token 或 password")
+            raise HTTPException(status_code=400, detail="auth_type ä»…æ”¯æŒ token æˆ– password")
         current["auth_type"] = auth_type
     if "token_or_pass" in payload:
         current["token_or_pass"] = normalize_text(payload.get("token_or_pass"))
@@ -1876,14 +2065,14 @@ async def api_update_agent(agent_id: str, request: Request) -> Dict[str, Any]:
         wanted = normalize_text(payload.get("default_model_id"))
         model_ids = {item.get("id") for item in current.get("models", [])}
         if wanted not in model_ids:
-            raise HTTPException(status_code=400, detail="default_model_id 不存在")
+            raise HTTPException(status_code=400, detail="default_model_id ä¸å­˜åœ¨")
         current["default_model_id"] = wanted
 
     if "default_chat_id" in payload:
         wanted = normalize_text(payload.get("default_chat_id"))
         chat_ids = {item.get("id") for item in current.get("chats", [])}
         if wanted not in chat_ids:
-            raise HTTPException(status_code=400, detail="default_chat_id 不存在")
+            raise HTTPException(status_code=400, detail="default_chat_id ä¸å­˜åœ¨")
         current["default_chat_id"] = wanted
 
     if "model_profile_id" in payload:
@@ -1931,7 +2120,7 @@ async def api_update_agent(agent_id: str, request: Request) -> Dict[str, Any]:
     gateway = restart_gateway()
     return {
         "status": "success",
-        "message": f"Agent {agent_id} 已更新",
+        "message": f"Agent {agent_id} å·²æ›´æ–°",
         "backup_version": backup_version,
         "agent": updated,
         "gateway": gateway,
@@ -1942,12 +2131,12 @@ async def api_update_agent(agent_id: str, request: Request) -> Dict[str, Any]:
 async def api_add_agent_model(agent_id: str, request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
     payload = await parse_payload(request)
-    agent_dir = get_agent_dir_or_404(agent_id)
+    agent_dir = ensure_agent_dir_for_update(agent_id)
     current = read_agent_config(agent_dir)
 
     model = normalize_text(payload.get("model"))
     if not model:
-        raise HTTPException(status_code=400, detail="model 不能为空")
+        raise HTTPException(status_code=400, detail="model ä¸èƒ½ä¸ºç©º")
     model_item = {
         "id": make_object_id("model"),
         "name": normalize_text(payload.get("name"), model),
@@ -1970,7 +2159,7 @@ async def api_add_agent_model(agent_id: str, request: Request) -> Dict[str, Any]
     gateway = restart_gateway()
     return {
         "status": "success",
-        "message": "模型配置已新增",
+        "message": "æ¨¡åž‹é…ç½®å·²æ–°å¢ž",
         "backup_version": backup_version,
         "agent": updated,
         "gateway": gateway,
@@ -1981,18 +2170,18 @@ async def api_add_agent_model(agent_id: str, request: Request) -> Dict[str, Any]
 async def api_patch_agent_model(agent_id: str, model_id: str, request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
     payload = await parse_payload(request)
-    agent_dir = get_agent_dir_or_404(agent_id)
+    agent_dir = ensure_agent_dir_for_update(agent_id)
     current = read_agent_config(agent_dir)
 
     models = list(current.get("models", []))
     target = next((m for m in models if normalize_text(m.get("id")) == model_id), None)
     if not target:
-        raise HTTPException(status_code=404, detail="模型配置不存在")
+        raise HTTPException(status_code=404, detail="æ¨¡åž‹é…ç½®ä¸å­˜åœ¨")
 
     if "model" in payload:
         value = normalize_text(payload.get("model"))
         if not value:
-            raise HTTPException(status_code=400, detail="model 不能为空")
+            raise HTTPException(status_code=400, detail="model ä¸èƒ½ä¸ºç©º")
         target["model"] = value
     if "name" in payload:
         target["name"] = normalize_text(payload.get("name"), target.get("model", "model"))
@@ -2010,7 +2199,7 @@ async def api_patch_agent_model(agent_id: str, model_id: str, request: Request) 
     gateway = restart_gateway()
     return {
         "status": "success",
-        "message": "模型配置已更新",
+        "message": "æ¨¡åž‹é…ç½®å·²æ›´æ–°",
         "backup_version": backup_version,
         "agent": updated,
         "gateway": gateway,
@@ -2021,17 +2210,17 @@ async def api_patch_agent_model(agent_id: str, model_id: str, request: Request) 
 async def api_add_agent_chat(agent_id: str, request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
     payload = await parse_payload(request)
-    agent_dir = get_agent_dir_or_404(agent_id)
+    agent_dir = ensure_agent_dir_for_update(agent_id)
     current = read_agent_config(agent_dir)
 
     entry = normalize_text(payload.get("entry") or payload.get("chat_entry"))
     if not entry:
-        raise HTTPException(status_code=400, detail="chat entry 不能为空")
+        raise HTTPException(status_code=400, detail="chat entry ä¸èƒ½ä¸ºç©º")
 
     model_ids = {item.get("id") for item in current.get("models", [])}
     chosen_model_id = normalize_text(payload.get("model_id"), current.get("default_model_id"))
     if chosen_model_id not in model_ids:
-        raise HTTPException(status_code=400, detail="model_id 不存在")
+        raise HTTPException(status_code=400, detail="model_id ä¸å­˜åœ¨")
 
     new_chat = {
         "id": make_object_id("chat"),
@@ -2054,7 +2243,7 @@ async def api_add_agent_chat(agent_id: str, request: Request) -> Dict[str, Any]:
     gateway = restart_gateway()
     return {
         "status": "success",
-        "message": "聊天配置已新增",
+        "message": "èŠå¤©é…ç½®å·²æ–°å¢ž",
         "backup_version": backup_version,
         "agent": updated,
         "gateway": gateway,
@@ -2065,18 +2254,18 @@ async def api_add_agent_chat(agent_id: str, request: Request) -> Dict[str, Any]:
 async def api_patch_agent_chat(agent_id: str, chat_id: str, request: Request) -> Dict[str, Any]:
     user = require_api_user(request)
     payload = await parse_payload(request)
-    agent_dir = get_agent_dir_or_404(agent_id)
+    agent_dir = ensure_agent_dir_for_update(agent_id)
     current = read_agent_config(agent_dir)
 
     chats = list(current.get("chats", []))
     target = next((c for c in chats if normalize_text(c.get("id")) == chat_id), None)
     if not target:
-        raise HTTPException(status_code=404, detail="聊天配置不存在")
+        raise HTTPException(status_code=404, detail="èŠå¤©é…ç½®ä¸å­˜åœ¨")
 
     if "entry" in payload or "chat_entry" in payload:
         entry = normalize_text(payload.get("entry") or payload.get("chat_entry"))
         if not entry:
-            raise HTTPException(status_code=400, detail="chat entry 不能为空")
+            raise HTTPException(status_code=400, detail="chat entry ä¸èƒ½ä¸ºç©º")
         target["entry"] = entry
     if "name" in payload:
         target["name"] = normalize_text(payload.get("name"), target.get("entry", "chat"))
@@ -2084,7 +2273,7 @@ async def api_patch_agent_chat(agent_id: str, chat_id: str, request: Request) ->
         model_id = normalize_text(payload.get("model_id"))
         model_ids = {item.get("id") for item in current.get("models", [])}
         if model_id not in model_ids:
-            raise HTTPException(status_code=400, detail="model_id 不存在")
+            raise HTTPException(status_code=400, detail="model_id ä¸å­˜åœ¨")
         target["model_id"] = model_id
     if str(payload.get("set_default", "")).lower() in {"1", "true", "yes"}:
         current["default_chat_id"] = chat_id
@@ -2098,7 +2287,7 @@ async def api_patch_agent_chat(agent_id: str, chat_id: str, request: Request) ->
     gateway = restart_gateway()
     return {
         "status": "success",
-        "message": "聊天配置已更新",
+        "message": "èŠå¤©é…ç½®å·²æ›´æ–°",
         "backup_version": backup_version,
         "agent": updated,
         "gateway": gateway,
@@ -2113,11 +2302,11 @@ async def switch_model(request: Request) -> Dict[str, Any]:
     model_name = normalize_text(payload.get("model_name"), model)
     provider = normalize_text(payload.get("provider"), "Custom")
     if not model:
-        raise HTTPException(status_code=400, detail="模型不能为空")
+        raise HTTPException(status_code=400, detail="æ¨¡åž‹ä¸èƒ½ä¸ºç©º")
 
     agent_dirs = [p for p in AGENTS_DIR.iterdir() if p.is_dir()]
     if not agent_dirs:
-        raise HTTPException(status_code=400, detail="当前没有可更新的 Agent")
+        raise HTTPException(status_code=400, detail="å½“å‰æ²¡æœ‰å¯æ›´æ–°çš„ Agent")
 
     backup_version = backup_current_config(
         version_label=normalize_text(payload.get("version")) or None,
@@ -2152,7 +2341,7 @@ async def switch_model(request: Request) -> Dict[str, Any]:
     gateway = restart_gateway()
     return {
         "status": "success",
-        "message": f"已更新 {updated} 个 Agent 的模型",
+        "message": f"å·²æ›´æ–° {updated} ä¸ª Agent çš„æ¨¡åž‹",
         "backup_version": backup_version,
         "gateway": gateway,
     }
@@ -2175,7 +2364,7 @@ async def create_backup(request: Request) -> Dict[str, Any]:
     )
     return {
         "status": "success",
-        "message": f"备份 {version} 创建成功",
+        "message": f"å¤‡ä»½ {version} åˆ›å»ºæˆåŠŸ",
         "version": version,
         "backups": list_backups(),
     }
@@ -2187,14 +2376,14 @@ async def rollback(request: Request) -> Dict[str, Any]:
     payload = await parse_payload(request)
     version = normalize_text(payload.get("version"))
     if not version:
-        raise HTTPException(status_code=400, detail="version 不能为空")
+        raise HTTPException(status_code=400, detail="version ä¸èƒ½ä¸ºç©º")
 
     target_backup = find_backup(version)
     if not target_backup:
-        raise HTTPException(status_code=404, detail="指定版本不存在")
+        raise HTTPException(status_code=404, detail="æŒ‡å®šç‰ˆæœ¬ä¸å­˜åœ¨")
     backup_path = safe_backup_path(version)
     if not backup_path or not backup_path.exists() or not backup_path.is_dir():
-        raise HTTPException(status_code=404, detail="指定版本不存在")
+        raise HTTPException(status_code=404, detail="æŒ‡å®šç‰ˆæœ¬ä¸å­˜åœ¨")
 
     rollback_backup = backup_current_config(
         version_label=normalize_text(payload.get("rollback_backup_version")) or None,
@@ -2219,7 +2408,7 @@ async def rollback(request: Request) -> Dict[str, Any]:
     gateway = restart_gateway()
     return {
         "status": "success",
-        "message": f"已回滚到 {version}",
+        "message": f"å·²å›žæ»šåˆ° {version}",
         "target_backup": target_backup,
         "rollback_backup": rollback_backup,
         "gateway": gateway,
@@ -2240,10 +2429,10 @@ async def capture_auth_url_start(request: Request) -> Dict[str, Any]:
     state_param = str(payload.get("state_param", "state")).strip() or "state"
 
     if not login_url:
-        raise HTTPException(status_code=400, detail="login_url 不能为空")
+        raise HTTPException(status_code=400, detail="login_url ä¸èƒ½ä¸ºç©º")
     parsed = urlparse(login_url)
     if parsed.scheme not in {"http", "https"}:
-        raise HTTPException(status_code=400, detail="login_url 必须是 http/https 地址")
+        raise HTTPException(status_code=400, detail="login_url å¿…é¡»æ˜¯ http/https åœ°å€")
 
     manual = create_manual_auth_flow(
         request=request,
@@ -2255,7 +2444,7 @@ async def capture_auth_url_start(request: Request) -> Dict[str, Any]:
         "status": "pending_external_auth",
         "mode": "url",
         "manual": manual,
-        "message": "请在外部浏览器打开鉴权 URL，完成登录后会自动回调并捕获凭据",
+        "message": "è¯·åœ¨å¤–éƒ¨æµè§ˆå™¨æ‰“å¼€é‰´æƒ URLï¼Œå®Œæˆç™»å½•åŽä¼šè‡ªåŠ¨å›žè°ƒå¹¶æ•èŽ·å‡­æ®",
     }
 
 
@@ -2265,10 +2454,10 @@ async def capture_auth_url_result(request: Request) -> Dict[str, Any]:
     cleanup_auth_flows()
     state = str(request.query_params.get("state", "")).strip()
     if not state:
-        raise HTTPException(status_code=400, detail="state 不能为空")
+        raise HTTPException(status_code=400, detail="state ä¸èƒ½ä¸ºç©º")
     flow = AUTH_FLOWS.get(state)
     if not flow:
-        raise HTTPException(status_code=404, detail="鉴权会话不存在或已过期")
+        raise HTTPException(status_code=404, detail="é‰´æƒä¼šè¯ä¸å­˜åœ¨æˆ–å·²è¿‡æœŸ")
 
     token = str(flow.get("token", "")).strip()
     if token:
@@ -2282,7 +2471,7 @@ async def capture_auth_url_result(request: Request) -> Dict[str, Any]:
     return {
         "status": "pending_external_auth",
         "state": state,
-        "message": "尚未收到回调，请完成外部浏览器鉴权",
+        "message": "å°šæœªæ”¶åˆ°å›žè°ƒï¼Œè¯·å®Œæˆå¤–éƒ¨æµè§ˆå™¨é‰´æƒ",
         "expires_in": max(0, int(flow.get("expires_at", 0) - time.time())),
     }
 
@@ -2293,11 +2482,11 @@ async def capture_auth_url_callback_fragment(request: Request) -> Dict[str, Any]
     state = str(payload.get("state", "")).strip()
     fragment = payload.get("fragment", {})
     if not state:
-        raise HTTPException(status_code=400, detail="state 不能为空")
+        raise HTTPException(status_code=400, detail="state ä¸èƒ½ä¸ºç©º")
     if not isinstance(fragment, dict):
         fragment = {}
     if state not in AUTH_FLOWS:
-        raise HTTPException(status_code=404, detail="鉴权会话不存在或已过期")
+        raise HTTPException(status_code=404, detail="é‰´æƒä¼šè¯ä¸å­˜åœ¨æˆ–å·²è¿‡æœŸ")
     save_auth_flow_payload(state, fragment)
     return {"status": "success"}
 
@@ -2342,8 +2531,8 @@ async def auth_callback(request: Request) -> HTMLResponse:
 </head>
 <body>
   <div class="box">
-    <h1>授权回调已接收</h1>
-    <p id="msg">你可以返回 OpenClaw Agent Manager 页面，点击“检查回调结果”。</p>
+    <h1>æŽˆæƒå›žè°ƒå·²æŽ¥æ”¶</h1>
+    <p id="msg">ä½ å¯ä»¥è¿”å›ž OpenClaw Agent Manager é¡µé¢ï¼Œç‚¹å‡»â€œæ£€æŸ¥å›žè°ƒç»“æžœâ€ã€‚</p>
   </div>
   <script>
     (async function() {{
@@ -2361,7 +2550,7 @@ async def auth_callback(request: Request) -> HTMLResponse:
         }});
         const msg = document.getElementById("msg");
         msg.classList.add("ok");
-        msg.textContent = "已从 URL 片段捕获凭据，你可以返回管理页面完成绑定。";
+        msg.textContent = "å·²ä»Ž URL ç‰‡æ®µæ•èŽ·å‡­æ®ï¼Œä½ å¯ä»¥è¿”å›žç®¡ç†é¡µé¢å®Œæˆç»‘å®šã€‚";
       }} catch (e) {{
         // no-op
       }}
@@ -2382,10 +2571,10 @@ async def capture_auth(request: Request) -> Dict[str, Any]:
     prefer_url = str(payload.get("prefer_url", "")).lower() in {"1", "true", "yes"}
 
     if not login_url:
-        raise HTTPException(status_code=400, detail="login_url 不能为空")
+        raise HTTPException(status_code=400, detail="login_url ä¸èƒ½ä¸ºç©º")
     parsed = urlparse(login_url)
     if parsed.scheme not in {"http", "https"}:
-        raise HTTPException(status_code=400, detail="login_url 必须是 http/https 地址")
+        raise HTTPException(status_code=400, detail="login_url å¿…é¡»æ˜¯ http/https åœ°å€")
 
     if prefer_url or not is_gui_available() or not username or not password:
         manual = create_manual_auth_flow(request=request, login_url=login_url)
@@ -2393,7 +2582,7 @@ async def capture_auth(request: Request) -> Dict[str, Any]:
             "status": "pending_external_auth",
             "mode": "url",
             "manual": manual,
-            "message": "当前环境无图形界面或未提供账号密码，请复制鉴权 URL 到可访问浏览器完成授权",
+            "message": "å½“å‰çŽ¯å¢ƒæ— å›¾å½¢ç•Œé¢æˆ–æœªæä¾›è´¦å·å¯†ç ï¼Œè¯·å¤åˆ¶é‰´æƒ URL åˆ°å¯è®¿é—®æµè§ˆå™¨å®ŒæˆæŽˆæƒ",
         }
 
     script_path = BASE_DIR / "auth_capture.py"
@@ -2403,7 +2592,7 @@ async def capture_auth(request: Request) -> Dict[str, Any]:
             "status": "pending_external_auth",
             "mode": "url",
             "manual": manual,
-            "message": "未找到自动捕获脚本，已切换到 URL 鉴权模式",
+            "message": "æœªæ‰¾åˆ°è‡ªåŠ¨æ•èŽ·è„šæœ¬ï¼Œå·²åˆ‡æ¢åˆ° URL é‰´æƒæ¨¡å¼",
         }
 
     env = os.environ.copy()
@@ -2423,7 +2612,7 @@ async def capture_auth(request: Request) -> Dict[str, Any]:
             "status": "pending_external_auth",
             "mode": "url",
             "manual": manual,
-            "message": "自动捕获超时，已切换到 URL 鉴权模式",
+            "message": "è‡ªåŠ¨æ•èŽ·è¶…æ—¶ï¼Œå·²åˆ‡æ¢åˆ° URL é‰´æƒæ¨¡å¼",
         }
 
     stdout_lines = [line.strip() for line in (result.stdout or "").splitlines() if line.strip()]
@@ -2436,7 +2625,7 @@ async def capture_auth(request: Request) -> Dict[str, Any]:
         "status": "pending_external_auth",
         "mode": "url",
         "manual": manual,
-        "message": "弹窗自动捕获失败，已切换到 URL 鉴权模式",
+        "message": "å¼¹çª—è‡ªåŠ¨æ•èŽ·å¤±è´¥ï¼Œå·²åˆ‡æ¢åˆ° URL é‰´æƒæ¨¡å¼",
     }
 
 
@@ -2454,16 +2643,16 @@ async def change_password(request: Request) -> Dict[str, Any]:
     confirm_password = str(payload.get("confirm_password", ""))
 
     if len(new_password) < 6:
-        raise HTTPException(status_code=400, detail="新密码长度至少 6 位")
+        raise HTTPException(status_code=400, detail="æ–°å¯†ç é•¿åº¦è‡³å°‘ 6 ä½")
     if new_password != confirm_password:
-        raise HTTPException(status_code=400, detail="两次新密码输入不一致")
+        raise HTTPException(status_code=400, detail="ä¸¤æ¬¡æ–°å¯†ç è¾“å…¥ä¸ä¸€è‡´")
 
     users = load_users()
     current_user = users.get(user["username"])
     if not current_user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+        raise HTTPException(status_code=404, detail="ç”¨æˆ·ä¸å­˜åœ¨")
     if not verify_password(current_password, current_user.get("password_hash", "")):
-        raise HTTPException(status_code=401, detail="当前密码错误")
+        raise HTTPException(status_code=401, detail="å½“å‰å¯†ç é”™è¯¯")
 
     current_user["password_hash"] = hash_password(new_password)
     current_user["updated_at"] = now_iso()
@@ -2471,7 +2660,7 @@ async def change_password(request: Request) -> Dict[str, Any]:
     users[user["username"]] = current_user
     save_users(users)
 
-    return {"status": "success", "message": "密码修改成功"}
+    return {"status": "success", "message": "å¯†ç ä¿®æ”¹æˆåŠŸ"}
 
 
 @app.post("/api/settings/history")
@@ -2509,3 +2698,4 @@ if __name__ == "__main__":
             f"[OpenClaw-Agent-Manager] Headless mode enabled, serving on http://{HEADLESS_HOST}:{APP_PORT}"
         )
         uvicorn.run(app, host=HEADLESS_HOST, port=APP_PORT)
+

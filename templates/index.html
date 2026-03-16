@@ -109,12 +109,12 @@
   const MUST_CHANGE_PASSWORD = {{ "true" if must_change_password else "false" }};
   const GUI_AVAILABLE = {{ "true" if gui_available else "false" }};
   const DEFAULT_VER = "{{ suggested_version }}";
-  const S = {lang:"en",models:[],profiles:[],channels:[],skills:[],mcps:[],agents:[],backups:[],guide:{},selAgentId:"",selAgent:null,selChannelId:"",selSkillId:"",selMcpId:"",manualState:"",nextVer:DEFAULT_VER};
-  const VIDS = ["caVer","uaVer","chVer","echVer","skVer","eskVer","mcpVer","emcpVer","bkVer"];
+  const S = {lang:"en",models:[],profiles:[],channels:[],skills:[],mcps:[],agents:[],backups:[],guide:{},selAgentId:"",selAgent:null,selChannelId:"",selSkillId:"",selMcpId:"",selProfileId:"",selModelName:"",manualState:"",nextVer:DEFAULT_VER};
+  const VIDS = ["caVer","uaVer","chVer","echVer","skVer","eskVer","mcpVer","emcpVer","bkVer","pmVer","epVer"];
 
   const I18N = {
-    en:{brand_sub:"Gateway Control Plane",nav_dash:"Dashboard",nav_agents:"Agents",nav_channels:"Channels",nav_models:"Models",nav_skills:"Skills",nav_mcp:"MCP",nav_versions:"Versions",nav_auth:"Auth",nav_security:"Security",nav_settings:"Settings",label_lang:"Language",action_refresh:"Refresh",action_logout:"Logout",top_user:"User",top_dir:"OpenClaw Dir",top_version:"Suggested Version",top_mode:"Auth Mode",mode_gui:"GUI Popup",mode_headless:"Headless URL",dash_overview:"System Overview",k_agents:"Agents",k_channels:"Channels",k_profiles:"Model Profiles",k_skills:"Skills",k_mcp:"MCP",dash_map:"OpenClaw Mapping (Core)",dash_backups:"Recent Backups",agent_create:"Create Agent",agent_list:"Agent List",agent_detail:"Agent Detail",agent_models:"Bound Models",agent_chats:"Bound Chats",channel_create:"Create Channel",channel_list:"Channel List",channel_edit:"Edit Channel",model_catalog:"Supported Model Catalog",model_custom:"Add Custom Model",skill_create:"Create Skill",skill_list:"Skill List",skill_edit:"Edit Skill",mcp_create:"Create MCP Server",mcp_list:"MCP Server List",mcp_edit:"Edit MCP Server",ver_create:"Create Backup",ver_list:"Version History",auth_capture:"Capture Authorization",auth_url:"URL Authorization (Headless)",security_title:"Account Security",security_warn:"Default password still active. Please change it now.",settings_title:"System Settings",l_agent_id:"Agent ID",l_profile:"Model Profile",l_fallback_model:"Fallback Model",l_custom_model:"Custom Model",l_channels:"Channels (multi)",l_default_channel:"Default Channel",l_skills:"Skills (multi)",l_mcp:"MCP (multi)",l_auth_type:"Auth Type",l_auth_value:"Token / Password",l_version:"Version",l_optional_id:"ID (optional)",l_desc:"Description",l_enabled:"Enabled",l_note:"Note",l_optional_user:"Username (optional)",l_optional_pass:"Password (optional)",l_token:"Captured Token",l_current_pwd:"Current Password",l_new_pwd:"New Password",l_confirm_pwd:"Confirm Password",l_keep:"Max backups (-1 unlimited)",l_default_model:"Default Model",l_default_chat:"Default Chat",th_profile:"Profile",th_model:"Model",th_channels:"Channels",th_updated:"Updated",th_name:"Name",th_usage:"Usage",th_enabled:"Enabled",th_action:"Action",th_provider:"Provider",th_model_id:"Model ID",th_created:"Created",th_by:"By",action_create:"Create",action_add:"Add",action_save:"Save",action_sync:"Sync Local",action_capture:"Start Capture",action_gen_auth:"Generate Auth URL",action_copy:"Copy URL",action_check:"Check Callback",action_change_pwd:"Change Password",pick:"Select",rollback:"Rollback",none:"None",custom_model:"Custom model...",refreshed:"Data refreshed",select_agent:"Please select an agent",select_channel:"Please select a channel",select_skill:"Please select a skill",select_mcp:"Please select an MCP server",require_model:"Please choose model/profile",require_login_url:"Please input login URL",copied:"URL copied",copy_fail:"Copy failed. Copy manually.",waiting:"Waiting callback",token_ok:"Token captured",url_ok:"Auth URL generated",create_ok:"Created",update_ok:"Updated",pwd_ok:"Password updated",save_ok:"Saved",init_fail:"Initialization failed",session:"Session expired",request_fail:"Request failed",no_data:"No data",no_versions:"No versions",on:"On",off:"Off",confirm_rollback:"Rollback to this version?"},
-    zh:{brand_sub:"\u7f51\u5173\u63a7\u5236\u4e2d\u5fc3",nav_dash:"\u4eea\u8868\u76d8",nav_agents:"Agent\u7ba1\u7406",nav_channels:"Channels\u7ba1\u7406",nav_models:"Models\u7ba1\u7406",nav_skills:"Skills\u7ba1\u7406",nav_mcp:"MCP\u7ba1\u7406",nav_versions:"\u5386\u53f2\u7248\u672c",nav_auth:"\u6388\u6743\u6355\u83b7",nav_security:"\u8d26\u53f7\u5b89\u5168",nav_settings:"\u7cfb\u7edf\u8bbe\u7f6e",label_lang:"\u8bed\u8a00",action_refresh:"\u5237\u65b0",action_logout:"\u9000\u51fa",top_user:"\u7528\u6237",top_dir:"OpenClaw\u76ee\u5f55",top_version:"\u5efa\u8bae\u7248\u672c",top_mode:"\u6388\u6743\u6a21\u5f0f",mode_gui:"GUI\u5f39\u7a97",mode_headless:"Headless URL",dash_overview:"\u7cfb\u7edf\u6982\u89c8",k_agents:"Agents",k_channels:"Channels",k_profiles:"\u6a21\u578b\u914d\u7f6e",k_skills:"Skills",k_mcp:"MCP",dash_map:"OpenClaw\u914d\u7f6e\u6620\u5c04",dash_backups:"\u6700\u8fd1\u5907\u4efd",agent_create:"\u521b\u5efa Agent",agent_list:"Agent\u5217\u8868",agent_detail:"Agent\u8be6\u60c5",agent_models:"\u5df2\u7ed1\u5b9a\u6a21\u578b",agent_chats:"\u5df2\u7ed1\u5b9a\u804a\u5929",channel_create:"\u521b\u5efa Channel",channel_list:"Channel\u5217\u8868",channel_edit:"\u7f16\u8f91 Channel",model_catalog:"\u652f\u6301\u6a21\u578b\u76ee\u5f55",model_custom:"\u6dfb\u52a0\u81ea\u5b9a\u4e49\u6a21\u578b",skill_create:"\u521b\u5efa Skill",skill_list:"Skill\u5217\u8868",skill_edit:"\u7f16\u8f91 Skill",mcp_create:"\u521b\u5efa MCP \u670d\u52a1",mcp_list:"MCP \u670d\u52a1\u5217\u8868",mcp_edit:"\u7f16\u8f91 MCP \u670d\u52a1",ver_create:"\u521b\u5efa\u5907\u4efd",ver_list:"\u5386\u53f2\u7248\u672c",auth_capture:"\u81ea\u52a8\u6355\u83b7\u6388\u6743",auth_url:"URL\u6388\u6743(Headless)",security_title:"\u8d26\u53f7\u5b89\u5168",security_warn:"\u9ed8\u8ba4\u5bc6\u7801\u4ecd\u5728\u4f7f\u7528\uff0c\u8bf7\u7acb\u5373\u4fee\u6539\u3002",settings_title:"\u7cfb\u7edf\u8bbe\u7f6e",l_agent_id:"Agent ID",l_profile:"\u6a21\u578b\u914d\u7f6e",l_fallback_model:"\u56de\u9000\u6a21\u578b",l_custom_model:"\u81ea\u5b9a\u4e49\u6a21\u578b",l_channels:"Channels(\u591a\u9009)",l_default_channel:"\u9ed8\u8ba4 Channel",l_skills:"Skills(\u591a\u9009)",l_mcp:"MCP(\u591a\u9009)",l_auth_type:"\u6388\u6743\u7c7b\u578b",l_auth_value:"Token/\u5bc6\u7801",l_version:"\u7248\u672c\u53f7",l_optional_id:"ID(\u53ef\u9009)",l_desc:"\u63cf\u8ff0",l_enabled:"\u542f\u7528",l_note:"\u5907\u6ce8",l_optional_user:"\u7528\u6237\u540d(\u53ef\u9009)",l_optional_pass:"\u5bc6\u7801(\u53ef\u9009)",l_token:"\u6355\u83b7 Token",l_current_pwd:"\u5f53\u524d\u5bc6\u7801",l_new_pwd:"\u65b0\u5bc6\u7801",l_confirm_pwd:"\u786e\u8ba4\u5bc6\u7801",l_keep:"\u6700\u5927\u5907\u4efd(-1\u4e0d\u9650)",l_default_model:"\u9ed8\u8ba4\u6a21\u578b",l_default_chat:"\u9ed8\u8ba4\u804a\u5929",th_profile:"\u914d\u7f6e",th_model:"\u6a21\u578b",th_channels:"Channels",th_updated:"\u66f4\u65b0\u65f6\u95f4",th_name:"\u540d\u79f0",th_usage:"\u4f7f\u7528\u6b21\u6570",th_enabled:"\u542f\u7528",th_action:"\u64cd\u4f5c",th_provider:"\u63d0\u4f9b\u65b9",th_model_id:"\u6a21\u578bID",th_created:"\u521b\u5efa",th_by:"\u64cd\u4f5c\u4eba",action_create:"\u521b\u5efa",action_add:"\u6dfb\u52a0",action_save:"\u4fdd\u5b58",action_sync:"\u540c\u6b65\u672c\u5730",action_capture:"\u5f00\u59cb\u6355\u83b7",action_gen_auth:"\u751f\u6210\u6388\u6743URL",action_copy:"\u590d\u5236URL",action_check:"\u68c0\u67e5\u56de\u8c03",action_change_pwd:"\u4fee\u6539\u5bc6\u7801",pick:"\u9009\u62e9",rollback:"\u56de\u6eda",none:"\u65e0",custom_model:"\u81ea\u5b9a\u4e49\u6a21\u578b...",refreshed:"\u6570\u636e\u5df2\u5237\u65b0",select_agent:"\u8bf7\u5148\u9009Agent",select_channel:"\u8bf7\u5148\u9009Channel",select_skill:"\u8bf7\u5148\u9009Skill",select_mcp:"\u8bf7\u5148\u9009MCP",require_model:"\u8bf7\u9009\u62e9\u6a21\u578b/\u914d\u7f6e",require_login_url:"\u8bf7\u8f93\u5165Login URL",copied:"URL\u5df2\u590d\u5236",copy_fail:"\u590d\u5236\u5931\u8d25\uff0c\u8bf7\u624b\u52a8\u590d\u5236",waiting:"\u7b49\u5f85\u56de\u8c03",token_ok:"Token\u6355\u83b7\u6210\u529f",url_ok:"\u6388\u6743URL\u5df2\u751f\u6210",create_ok:"\u521b\u5efa\u6210\u529f",update_ok:"\u66f4\u65b0\u6210\u529f",pwd_ok:"\u5bc6\u7801\u5df2\u66f4\u65b0",save_ok:"\u4fdd\u5b58\u6210\u529f",init_fail:"\u521d\u59cb\u5316\u5931\u8d25",session:"\u4f1a\u8bdd\u5df2\u8fc7\u671f",request_fail:"\u8bf7\u6c42\u5931\u8d25",no_data:"\u6682\u65e0\u6570\u636e",no_versions:"\u6682\u65e0\u7248\u672c",on:"\u542f\u7528",off:"\u505c\u7528",confirm_rollback:"\u786e\u5b9a\u56de\u6eda\u5230\u8be5\u7248\u672c?"}
+    en:{brand_sub:"Gateway Control Plane",nav_dash:"Dashboard",nav_agents:"Agents",nav_channels:"Channels",nav_models:"Models",nav_skills:"Skills",nav_mcp:"MCP",nav_versions:"Versions",nav_auth:"Auth",nav_security:"Security",nav_settings:"Settings",label_lang:"Language",action_refresh:"Refresh",action_logout:"Logout",top_user:"User",top_dir:"OpenClaw Dir",top_version:"Suggested Version",top_mode:"Auth Mode",mode_gui:"GUI Popup",mode_headless:"Headless URL",dash_overview:"System Overview",k_agents:"Agents",k_channels:"Channels",k_profiles:"Model Profiles",k_skills:"Skills",k_mcp:"MCP",dash_map:"OpenClaw Mapping (Core)",dash_backups:"Recent Backups",agent_create:"Create Agent",agent_list:"Agent List",agent_detail:"Agent Detail",agent_models:"Bound Models",agent_chats:"Bound Chats",channel_create:"Create Channel",channel_list:"Channel List",channel_edit:"Edit Channel",model_catalog:"Supported Model Catalog",model_custom:"Add Custom Model",skill_create:"Create Skill",skill_list:"Skill List",skill_edit:"Edit Skill",mcp_create:"Create MCP Server",mcp_list:"MCP Server List",mcp_edit:"Edit MCP Server",ver_create:"Create Backup",ver_list:"Version History",auth_capture:"Capture Authorization",auth_url:"URL Authorization (Headless)",security_title:"Account Security",security_warn:"Default password still active. Please change it now.",settings_title:"System Settings",l_agent_id:"Agent ID",l_profile:"Model Profile",l_fallback_model:"Fallback Model",l_custom_model:"Custom Model",l_channels:"Channels (multi)",l_default_channel:"Default Channel",l_skills:"Skills (multi)",l_mcp:"MCP (multi)",l_auth_type:"Auth Type",l_auth_value:"Token / Password",l_version:"Version",l_optional_id:"ID (optional)",l_desc:"Description",l_enabled:"Enabled",l_note:"Note",l_optional_user:"Username (optional)",l_optional_pass:"Password (optional)",l_token:"Captured Token",l_current_pwd:"Current Password",l_new_pwd:"New Password",l_confirm_pwd:"Confirm Password",l_keep:"Max backups (-1 unlimited)",l_default_model:"Default Model",l_default_chat:"Default Chat",th_profile:"Profile",th_model:"Model",th_channels:"Channels",th_updated:"Updated",th_name:"Name",th_usage:"Usage",th_enabled:"Enabled",th_action:"Action",th_provider:"Provider",th_model_id:"Model ID",th_created:"Created",th_by:"By",th_source:"Source",action_create:"Create",action_add:"Add",action_save:"Save",action_sync:"Sync Local",action_capture:"Start Capture",action_gen_auth:"Generate Auth URL",action_copy:"Copy URL",action_check:"Check Callback",action_change_pwd:"Change Password",pick:"Select",rollback:"Rollback",none:"None",custom_model:"Custom model...",refreshed:"Data refreshed",select_agent:"Please select an agent",select_channel:"Please select a channel",select_skill:"Please select a skill",select_mcp:"Please select an MCP server",select_profile:"Please select a model profile",require_model:"Please choose model/profile",require_login_url:"Please input login URL",copied:"URL copied",copy_fail:"Copy failed. Copy manually.",waiting:"Waiting callback",token_ok:"Token captured",url_ok:"Auth URL generated",create_ok:"Created",update_ok:"Updated",pwd_ok:"Password updated",save_ok:"Saved",init_fail:"Initialization failed",session:"Session expired",request_fail:"Request failed",no_data:"No data",no_versions:"No versions",on:"On",off:"Off",confirm_rollback:"Rollback to this version?"},
+    zh:{brand_sub:"\u7f51\u5173\u63a7\u5236\u4e2d\u5fc3",nav_dash:"\u4eea\u8868\u76d8",nav_agents:"Agent\u7ba1\u7406",nav_channels:"Channels\u7ba1\u7406",nav_models:"Models\u7ba1\u7406",nav_skills:"Skills\u7ba1\u7406",nav_mcp:"MCP\u7ba1\u7406",nav_versions:"\u5386\u53f2\u7248\u672c",nav_auth:"\u6388\u6743\u6355\u83b7",nav_security:"\u8d26\u53f7\u5b89\u5168",nav_settings:"\u7cfb\u7edf\u8bbe\u7f6e",label_lang:"\u8bed\u8a00",action_refresh:"\u5237\u65b0",action_logout:"\u9000\u51fa",top_user:"\u7528\u6237",top_dir:"OpenClaw\u76ee\u5f55",top_version:"\u5efa\u8bae\u7248\u672c",top_mode:"\u6388\u6743\u6a21\u5f0f",mode_gui:"GUI\u5f39\u7a97",mode_headless:"Headless URL",dash_overview:"\u7cfb\u7edf\u6982\u89c8",k_agents:"Agents",k_channels:"Channels",k_profiles:"\u6a21\u578b\u914d\u7f6e",k_skills:"Skills",k_mcp:"MCP",dash_map:"OpenClaw\u914d\u7f6e\u6620\u5c04",dash_backups:"\u6700\u8fd1\u5907\u4efd",agent_create:"\u521b\u5efa Agent",agent_list:"Agent\u5217\u8868",agent_detail:"Agent\u8be6\u60c5",agent_models:"\u5df2\u7ed1\u5b9a\u6a21\u578b",agent_chats:"\u5df2\u7ed1\u5b9a\u804a\u5929",channel_create:"\u521b\u5efa Channel",channel_list:"Channel\u5217\u8868",channel_edit:"\u7f16\u8f91 Channel",model_catalog:"\u652f\u6301\u6a21\u578b\u76ee\u5f55",model_custom:"\u6dfb\u52a0\u81ea\u5b9a\u4e49\u6a21\u578b",skill_create:"\u521b\u5efa Skill",skill_list:"Skill\u5217\u8868",skill_edit:"\u7f16\u8f91 Skill",mcp_create:"\u521b\u5efa MCP \u670d\u52a1",mcp_list:"MCP \u670d\u52a1\u5217\u8868",mcp_edit:"\u7f16\u8f91 MCP \u670d\u52a1",ver_create:"\u521b\u5efa\u5907\u4efd",ver_list:"\u5386\u53f2\u7248\u672c",auth_capture:"\u81ea\u52a8\u6355\u83b7\u6388\u6743",auth_url:"URL\u6388\u6743(Headless)",security_title:"\u8d26\u53f7\u5b89\u5168",security_warn:"\u9ed8\u8ba4\u5bc6\u7801\u4ecd\u5728\u4f7f\u7528\uff0c\u8bf7\u7acb\u5373\u4fee\u6539\u3002",settings_title:"\u7cfb\u7edf\u8bbe\u7f6e",l_agent_id:"Agent ID",l_profile:"\u6a21\u578b\u914d\u7f6e",l_fallback_model:"\u56de\u9000\u6a21\u578b",l_custom_model:"\u81ea\u5b9a\u4e49\u6a21\u578b",l_channels:"Channels(\u591a\u9009)",l_default_channel:"\u9ed8\u8ba4 Channel",l_skills:"Skills(\u591a\u9009)",l_mcp:"MCP(\u591a\u9009)",l_auth_type:"\u6388\u6743\u7c7b\u578b",l_auth_value:"Token/\u5bc6\u7801",l_version:"\u7248\u672c\u53f7",l_optional_id:"ID(\u53ef\u9009)",l_desc:"\u63cf\u8ff0",l_enabled:"\u542f\u7528",l_note:"\u5907\u6ce8",l_optional_user:"\u7528\u6237\u540d(\u53ef\u9009)",l_optional_pass:"\u5bc6\u7801(\u53ef\u9009)",l_token:"\u6355\u83b7 Token",l_current_pwd:"\u5f53\u524d\u5bc6\u7801",l_new_pwd:"\u65b0\u5bc6\u7801",l_confirm_pwd:"\u786e\u8ba4\u5bc6\u7801",l_keep:"\u6700\u5927\u5907\u4efd(-1\u4e0d\u9650)",l_default_model:"\u9ed8\u8ba4\u6a21\u578b",l_default_chat:"\u9ed8\u8ba4\u804a\u5929",th_profile:"\u914d\u7f6e",th_model:"\u6a21\u578b",th_channels:"Channels",th_updated:"\u66f4\u65b0\u65f6\u95f4",th_name:"\u540d\u79f0",th_usage:"\u4f7f\u7528\u6b21\u6570",th_enabled:"\u542f\u7528",th_action:"\u64cd\u4f5c",th_provider:"\u63d0\u4f9b\u65b9",th_model_id:"\u6a21\u578bID",th_created:"\u521b\u5efa",th_by:"操作人",th_source:"来源",action_create:"\u521b\u5efa",action_add:"\u6dfb\u52a0",action_save:"\u4fdd\u5b58",action_sync:"\u540c\u6b65\u672c\u5730",action_capture:"\u5f00\u59cb\u6355\u83b7",action_gen_auth:"\u751f\u6210\u6388\u6743URL",action_copy:"\u590d\u5236URL",action_check:"\u68c0\u67e5\u56de\u8c03",action_change_pwd:"\u4fee\u6539\u5bc6\u7801",pick:"\u9009\u62e9",rollback:"\u56de\u6eda",none:"\u65e0",custom_model:"\u81ea\u5b9a\u4e49\u6a21\u578b...",refreshed:"\u6570\u636e\u5df2\u5237\u65b0",select_agent:"\u8bf7\u5148\u9009Agent",select_channel:"\u8bf7\u5148\u9009Channel",select_skill:"\u8bf7\u5148\u9009Skill",select_mcp:"请先选MCP",select_profile:"请先选模型配置",require_model:"\u8bf7\u9009\u62e9\u6a21\u578b/\u914d\u7f6e",require_login_url:"\u8bf7\u8f93\u5165Login URL",copied:"URL\u5df2\u590d\u5236",copy_fail:"\u590d\u5236\u5931\u8d25\uff0c\u8bf7\u624b\u52a8\u590d\u5236",waiting:"\u7b49\u5f85\u56de\u8c03",token_ok:"Token\u6355\u83b7\u6210\u529f",url_ok:"\u6388\u6743URL\u5df2\u751f\u6210",create_ok:"\u521b\u5efa\u6210\u529f",update_ok:"\u66f4\u65b0\u6210\u529f",pwd_ok:"\u5bc6\u7801\u5df2\u66f4\u65b0",save_ok:"\u4fdd\u5b58\u6210\u529f",init_fail:"\u521d\u59cb\u5316\u5931\u8d25",session:"\u4f1a\u8bdd\u5df2\u8fc7\u671f",request_fail:"\u8bf7\u6c42\u5931\u8d25",no_data:"\u6682\u65e0\u6570\u636e",no_versions:"\u6682\u65e0\u7248\u672c",on:"\u542f\u7528",off:"\u505c\u7528",confirm_rollback:"\u786e\u5b9a\u56de\u6eda\u5230\u8be5\u7248\u672c?"}
   };
 
   const el = (id) => document.getElementById(id);
@@ -128,6 +128,108 @@
   const getMulti = (id) => [...el(id).options].filter(o=>o.selected).map(o=>o.value).filter(Boolean);
   const setMulti = (id,vals) => { const s=new Set(uniq(vals)); [...el(id).options].forEach(o=>o.selected=s.has(o.value)); };
   const tf = (b) => b ? t("on") : t("off");
+  const gv = (id) => (el(id) ? el(id).value : "");
+  const gb = (id) => !!(el(id) && el(id).checked);
+
+  const toggleTelegram = (providerId, boxId) => {
+    const provider = (gv(providerId) || "").toLowerCase();
+    if (el(boxId)) el(boxId).hidden = provider !== "telegram";
+  };
+
+  const ensureDynamicPanels = () => {
+    const createForm = el("fCreateChannel");
+    if (createForm && !el("chProvider")) {
+      createForm.insertAdjacentHTML("beforeend", `
+        <div class="field"><label>Provider</label><select id="chProvider"><option value="custom">custom</option><option value="telegram">telegram</option><option value="discord">discord</option><option value="slack">slack</option><option value="wechat">wechat</option></select></div>
+        <div class="field"><label>Auth JSON</label><textarea id="chAuthJson" placeholder='{"token":"..."}'></textarea></div>
+        <div class="field"><label>Settings JSON</label><textarea id="chSettingsJson" placeholder='{"key":"value"}'></textarea></div>
+        <div class="manual" id="chTelBox" hidden>
+          <div class="field"><label>Telegram Bot Token</label><input id="chTgToken"></div>
+          <div class="field"><label>DM Policy</label><select id="chTgDmPolicy"><option value="all">all</option><option value="whitelist">whitelist</option><option value="none">none</option></select></div>
+          <div class="field"><label>DM Allowlist (comma)</label><input id="chTgAllowFrom"></div>
+          <div class="field"><label>Group Policy</label><select id="chTgGroupPolicy"><option value="off">off</option><option value="all">all</option><option value="whitelist">whitelist</option></select></div>
+          <div class="field"><label>Group Allowlist (comma)</label><input id="chTgGroupAllowFrom"></div>
+          <div class="field"><label><input type="checkbox" id="chTgRequireMention"> Require Mention</label></div>
+        </div>
+      `);
+    }
+
+    const editForm = el("fEditChannel");
+    if (editForm && !el("echProvider")) {
+      editForm.insertAdjacentHTML("beforeend", `
+        <div class="c2 field"><label>Provider</label><select id="echProvider"><option value="custom">custom</option><option value="telegram">telegram</option><option value="discord">discord</option><option value="slack">slack</option><option value="wechat">wechat</option></select></div>
+        <div class="c5 field"><label>Auth JSON</label><input id="echAuthJson"></div>
+        <div class="c5 field"><label>Settings JSON</label><input id="echSettingsJson"></div>
+        <div class="c12 manual" id="echTelBox" hidden>
+          <div class="grid">
+            <div class="c3 field"><label>Telegram Bot Token</label><input id="echTgToken"></div>
+            <div class="c2 field"><label>DM Policy</label><select id="echTgDmPolicy"><option value="all">all</option><option value="whitelist">whitelist</option><option value="none">none</option></select></div>
+            <div class="c3 field"><label>DM Allowlist (comma)</label><input id="echTgAllowFrom"></div>
+            <div class="c2 field"><label>Group Policy</label><select id="echTgGroupPolicy"><option value="off">off</option><option value="all">all</option><option value="whitelist">whitelist</option></select></div>
+            <div class="c2 field"><label>Group Allowlist (comma)</label><input id="echTgGroupAllowFrom"></div>
+            <div class="c2 field"><label><input type="checkbox" id="echTgRequireMention"> Require Mention</label></div>
+          </div>
+        </div>
+      `);
+    }
+
+    const modelsGrid = document.querySelector("#p-models .grid");
+    if (modelsGrid && !el("tbProfiles")) {
+      modelsGrid.insertAdjacentHTML("beforeend", `
+        <div class="card c12">
+          <div class="grid">
+            <div class="c4">
+              <h2>Model Editor</h2>
+              <form id="fEditCatalogModel">
+                <div class="field"><label>Target Model</label><input id="emTargetModel" class="mono" readonly></div>
+                <div class="field"><label>Provider</label><input id="emProvider"></div>
+                <div class="field"><label>Model</label><input id="emModel"></div>
+                <div class="field"><label>Label</label><input id="emLabel"></div>
+                <div class="row"><button class="btn" id="emSubmit" type="submit" disabled>Save</button></div>
+              </form>
+            </div>
+            <div class="c4">
+              <h2>Create Model Profile</h2>
+              <form id="fCreateProfile">
+                <div class="field"><label>ID (optional)</label><input id="pmId"></div>
+                <div class="field"><label>Name</label><input id="pmName"></div>
+                <div class="field"><label>Model</label><select id="pmModel"></select></div>
+                <div class="field" id="pmCustomWrap" hidden><label>Custom Model</label><input id="pmCustom"></div>
+                <div class="field"><label>Provider</label><input id="pmProvider"></div>
+                <div class="field"><label>Auth Mode</label><select id="pmAuthMode"><option value="shared">shared</option><option value="independent">independent</option></select></div>
+                <div class="field"><label>Auth Profile</label><input id="pmAuthProfile"></div>
+                <div class="field"><label>Auth Value</label><input id="pmAuthValue"></div>
+                <div class="field"><label>Base URL</label><input id="pmBaseUrl"></div>
+                <div class="field"><label><input type="checkbox" id="pmEnabled" checked> Enabled</label></div>
+                <div class="field"><label>Version</label><input id="pmVer"></div>
+                <div class="row"><button class="btn" type="submit">Create</button></div>
+              </form>
+            </div>
+            <div class="c4">
+              <h2>Edit Model Profile</h2>
+              <form id="fEditProfile">
+                <div class="field"><label>Profile ID</label><input id="epId" class="mono" readonly></div>
+                <div class="field"><label>Name</label><input id="epName"></div>
+                <div class="field"><label>Provider</label><input id="epProvider"></div>
+                <div class="field"><label>Model</label><input id="epModel"></div>
+                <div class="field"><label>Auth Mode</label><select id="epAuthMode"><option value="shared">shared</option><option value="independent">independent</option></select></div>
+                <div class="field"><label>Auth Profile</label><input id="epAuthProfile"></div>
+                <div class="field"><label>Auth Value</label><input id="epAuthValue"></div>
+                <div class="field"><label>Base URL</label><input id="epBaseUrl"></div>
+                <div class="field"><label><input type="checkbox" id="epEnabled"> Enabled</label></div>
+                <div class="field"><label>Version</label><input id="epVer"></div>
+                <div class="row"><button class="btn" id="epSubmit" type="submit" disabled>Save</button></div>
+              </form>
+            </div>
+            <div class="c12">
+              <h2>Model Profiles</h2>
+              <div class="table"><table><thead><tr><th>ID</th><th>Name</th><th>Provider</th><th>Model</th><th>Usage</th><th>Enabled</th><th>Action</th></tr></thead><tbody id="tbProfiles"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+  };
 
   const api = async (u,m="GET",b=null) => {
     const o={method:m,credentials:"same-origin",headers:{"Content-Type":"application/json"}};
@@ -205,7 +307,7 @@
   const renderAgents = () => {
     const tb=el("tbAgents");
     if(!S.agents.length){tb.innerHTML=`<tr><td colspan="5">${esc(t("no_data"))}</td></tr>`; return;}
-    tb.innerHTML=S.agents.map(a=>`<tr data-id="${esc(a.id)}" ${S.selAgentId===a.id?'style="background:#5388d330"':""}><td class="mono">${esc(a.id)}</td><td>${esc(a.model_profile_id||"-")}</td><td class="mono">${esc(a.model||"-")}</td><td>${esc(a.channel_count||0)}</td><td class="mono">${esc(a.updated_at||"-")}</td></tr>`).join("");
+    tb.innerHTML=S.agents.map(a=>`<tr data-id="${esc(a.id)}" ${S.selAgentId===a.id?'style="background:#5388d330"':""}><td class="mono">${esc(a.id)}</td><td>${esc(a.model_profile_id||"-")} ${a.source?`<span class="tag">${esc(a.source)}</span>`:""}</td><td class="mono">${esc(a.model||"-")}</td><td>${esc(a.channel_count||0)}</td><td class="mono">${esc(a.updated_at||"-")}</td></tr>`).join("");
     tb.querySelectorAll("tr[data-id]").forEach(r=>r.onclick=()=>pickAgent(r.dataset.id||""));
   };
 
@@ -236,8 +338,37 @@
   const renderChannels = () => {
     const tb=el("tbChannels");
     if(!S.channels.length){tb.innerHTML=`<tr><td colspan="6">${esc(t("no_data"))}</td></tr>`;return;}
-    tb.innerHTML=S.channels.map(c=>`<tr><td class="mono">${esc(c.id)}</td><td>${esc(c.name)}</td><td class="mono">${esc(c.entry)}</td><td>${esc(c.usage||0)}</td><td>${esc(tf(!!c.enabled))}</td><td><button class="btn sec pick-ch" data-id="${esc(c.id)}">${esc(t("pick"))}</button></td></tr>`).join("");
-    tb.querySelectorAll(".pick-ch").forEach(b=>b.onclick=()=>{const c=pick(S.channels,b.dataset.id||""); if(!c)return; S.selChannelId=c.id; el("chTitle").textContent=c.id; el("echName").value=c.name||""; el("echEntry").value=c.entry||""; el("echDesc").value=c.description||""; el("echEnabled").checked=!!c.enabled; el("echVer").value=S.nextVer; el("echSubmit").disabled=false;});
+    tb.innerHTML=S.channels.map(c=>`<tr><td class="mono">${esc(c.id)}</td><td>${esc(c.name)} <span class="tag">${esc(c.provider||"custom")}</span>${c.source?`<span class="tag warn">${esc(c.source)}</span>`:""}</td><td class="mono">${esc(c.entry)}</td><td>${esc(c.usage||0)}</td><td>${esc(tf(!!c.enabled))}</td><td><button class="btn sec pick-ch" data-id="${esc(c.id)}">${esc(t("pick"))}</button></td></tr>`).join("");
+    tb.querySelectorAll(".pick-ch").forEach(b=>b.onclick=()=>{const c=pick(S.channels,b.dataset.id||""); if(!c)return; S.selChannelId=c.id; el("chTitle").textContent=c.id; el("echName").value=c.name||""; el("echEntry").value=c.entry||""; el("echDesc").value=c.description||""; if(el("echProvider")) el("echProvider").value=(c.provider||"custom").toLowerCase(); if(el("echAuthJson")) el("echAuthJson").value=c.auth_json||""; if(el("echSettingsJson")) el("echSettingsJson").value=c.settings_json||""; if(el("echTgToken")) el("echTgToken").value=c.telegram_bot_token||""; if(el("echTgDmPolicy")) el("echTgDmPolicy").value=c.telegram_dm_policy||"all"; if(el("echTgAllowFrom")) el("echTgAllowFrom").value=c.telegram_allow_from||""; if(el("echTgGroupPolicy")) el("echTgGroupPolicy").value=c.telegram_group_policy||"off"; if(el("echTgGroupAllowFrom")) el("echTgGroupAllowFrom").value=c.telegram_group_allow_from||""; if(el("echTgRequireMention")) el("echTgRequireMention").checked=!!c.telegram_require_mention; toggleTelegram("echProvider","echTelBox"); el("echEnabled").checked=!!c.enabled; el("echVer").value=S.nextVer; el("echSubmit").disabled=false;});
+  };
+
+  const renderModels = () => {
+    const tb = el("tbCatalog");
+    if(!tb) return;
+    const table = tb.closest("table");
+    const head = table ? table.querySelector("thead tr") : null;
+    if(head){
+      head.innerHTML = `<th>${esc(t("th_provider"))}</th><th>${esc(t("th_model"))}</th><th>Label</th><th>${esc(t("th_source"))}</th><th>${esc(t("th_action"))}</th>`;
+    }
+    if(!S.models.length){tb.innerHTML=`<tr><td colspan="5">${esc(t("no_data"))}</td></tr>`;}
+    else{
+      tb.innerHTML=S.models.map(m=>`<tr><td>${esc(m.provider||"-")}</td><td class="mono">${esc(m.model||"-")}</td><td>${esc(m.label||m.model||"-")}</td><td>${esc(m.source||"official")}</td><td><button class="btn sec pick-model" data-model="${esc(m.model)}">${esc(t("pick"))}</button></td></tr>`).join("");
+      tb.querySelectorAll(".pick-model").forEach(b=>b.onclick=()=>{const m=S.models.find(x=>String(x.model)===String(b.dataset.model||"")); if(!m)return; S.selModelName=m.model; if(el("emTargetModel")) el("emTargetModel").value=m.model||""; if(el("emProvider")) el("emProvider").value=m.provider||""; if(el("emModel")) el("emModel").value=m.model||""; if(el("emLabel")) el("emLabel").value=m.label||m.model||""; if(el("emSubmit")) el("emSubmit").disabled=false;});
+    }
+
+    if(el("pmModel")){
+      el("pmModel").innerHTML = modelOpts();
+      syncCustom("pmModel","pmCustomWrap","pmProvider");
+    }
+
+    const tbp = el("tbProfiles");
+    if(tbp){
+      if(!S.profiles.length){tbp.innerHTML=`<tr><td colspan="7">${esc(t("no_data"))}</td></tr>`;}
+      else{
+        tbp.innerHTML=S.profiles.map(p=>`<tr><td class="mono">${esc(p.id)}</td><td>${esc(p.name)}</td><td>${esc(p.provider||"-")}</td><td class="mono">${esc(p.model||"-")}</td><td>${esc(p.usage||0)}</td><td>${esc(tf(!!p.enabled))}</td><td><button class="btn sec pick-profile" data-id="${esc(p.id)}">${esc(t("pick"))}</button></td></tr>`).join("");
+        tbp.querySelectorAll(".pick-profile").forEach(b=>b.onclick=()=>{const p=pick(S.profiles,b.dataset.id||""); if(!p)return; S.selProfileId=p.id; if(el("epId")) el("epId").value=p.id||""; if(el("epName")) el("epName").value=p.name||""; if(el("epProvider")) el("epProvider").value=p.provider||""; if(el("epModel")) el("epModel").value=p.model||""; if(el("epAuthMode")) el("epAuthMode").value=p.auth_mode||"shared"; if(el("epAuthProfile")) el("epAuthProfile").value=p.auth_profile||""; if(el("epAuthValue")) el("epAuthValue").value=p.auth_value||""; if(el("epBaseUrl")) el("epBaseUrl").value=p.base_url||""; if(el("epEnabled")) el("epEnabled").checked=!!p.enabled; if(el("epVer")) el("epVer").value=S.nextVer; if(el("epSubmit")) el("epSubmit").disabled=false;});
+      }
+    }
   };
 
   const renderSkills = () => {
@@ -267,7 +398,7 @@
     el("kProfiles").textContent=String(S.profiles.length);
     el("kSkills").textContent=String(S.skills.length);
     el("kMcp").textContent=String(S.mcps.length);
-    renderGuide(); renderDashBackups(); renderAgents(); renderAgentDetail(); renderChannels(); renderSkills(); renderMcps(); renderBackups();
+    renderGuide(); renderDashBackups(); renderAgents(); renderAgentDetail(); renderChannels(); renderModels(); renderSkills(); renderMcps(); renderBackups();
   };
 
   const refreshCreateOptions = () => {
@@ -321,12 +452,14 @@
   el("caModel").onchange=refreshCreateOptions;
   el("caChannels").onchange=()=>refreshDefChannel("caChannels","caDefaultChannel");
   el("uaChannels").onchange=()=>refreshDefChannel("uaChannels","uaDefaultChannel",el("uaDefaultChannel").value);
+  if(el("chProvider")) el("chProvider").onchange=()=>toggleTelegram("chProvider","chTelBox");
+  if(el("echProvider")) el("echProvider").onchange=()=>toggleTelegram("echProvider","echTelBox");
 
   el("fCreateAgent").onsubmit=async(e)=>{e.preventDefault(); try{const pid=el("caProfile").value.trim(); const mv=modelValue("caModel","caCustom"); if(!pid&&!mv.model) throw new Error(t("require_model")); const p={id:el("caId").value.trim(),model_profile_id:pid,model:mv.model,model_name:mv.model,model_provider:mv.provider,channel_ids:getMulti("caChannels"),default_channel_id:el("caDefaultChannel").value,skill_ids:getMulti("caSkills"),mcp_ids:getMulti("caMcps"),auth_type:el("caAuth").value,token_or_pass:el("caAuthValue").value.trim(),version:el("caVer").value.trim(),chat_entry:"default",chat_name:"Default"}; await api("/api/agents","POST",p); note(t("create_ok")); const id=p.id; e.target.reset(); await load(); if(id) await pickAgent(id);}catch(err){note(err.message,true);}};
   el("fUpdateAgent").onsubmit=async(e)=>{e.preventDefault(); if(!S.selAgentId) return note(t("select_agent"),true); try{const p={model_profile_id:el("uaProfile").value.trim(),channel_ids:getMulti("uaChannels"),default_channel_id:el("uaDefaultChannel").value,skill_ids:getMulti("uaSkills"),mcp_ids:getMulti("uaMcps"),auth_type:el("uaAuth").value,token_or_pass:el("uaAuthValue").value.trim(),default_model_id:el("uaDefModel").value,default_chat_id:el("uaDefChat").value,version:el("uaVer").value.trim()}; await api(`/api/agents/${encodeURIComponent(S.selAgentId)}`,"PATCH",p); note(t("update_ok")); await load(); await pickAgent(S.selAgentId);}catch(err){note(err.message,true);}};
 
-  el("fCreateChannel").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/channels","POST",{id:el("chId").value.trim(),name:el("chName").value.trim(),entry:el("chEntry").value.trim(),description:el("chDesc").value.trim(),enabled:el("chEnabled").checked,version:el("chVer").value.trim()}); note(t("create_ok")); e.target.reset(); await load();}catch(err){note(err.message,true);}};
-  el("fEditChannel").onsubmit=async(e)=>{e.preventDefault(); if(!S.selChannelId) return note(t("select_channel"),true); try{await api(`/api/channels/${encodeURIComponent(S.selChannelId)}`,"PATCH",{name:el("echName").value.trim(),entry:el("echEntry").value.trim(),description:el("echDesc").value.trim(),enabled:el("echEnabled").checked,version:el("echVer").value.trim()}); note(t("update_ok")); await load();}catch(err){note(err.message,true);}};
+  el("fCreateChannel").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/channels","POST",{id:el("chId").value.trim(),name:el("chName").value.trim(),provider:gv("chProvider")||"custom",entry:el("chEntry").value.trim(),description:el("chDesc").value.trim(),auth_json:gv("chAuthJson").trim(),settings_json:gv("chSettingsJson").trim(),telegram_bot_token:gv("chTgToken").trim(),telegram_dm_policy:gv("chTgDmPolicy")||"all",telegram_allow_from:gv("chTgAllowFrom").trim(),telegram_group_policy:gv("chTgGroupPolicy")||"off",telegram_group_allow_from:gv("chTgGroupAllowFrom").trim(),telegram_require_mention:gb("chTgRequireMention"),enabled:el("chEnabled").checked,version:el("chVer").value.trim()}); note(t("create_ok")); e.target.reset(); toggleTelegram("chProvider","chTelBox"); await load();}catch(err){note(err.message,true);}};
+  el("fEditChannel").onsubmit=async(e)=>{e.preventDefault(); if(!S.selChannelId) return note(t("select_channel"),true); try{await api(`/api/channels/${encodeURIComponent(S.selChannelId)}`,"PATCH",{name:el("echName").value.trim(),provider:gv("echProvider")||"custom",entry:el("echEntry").value.trim(),description:el("echDesc").value.trim(),auth_json:gv("echAuthJson").trim(),settings_json:gv("echSettingsJson").trim(),telegram_bot_token:gv("echTgToken").trim(),telegram_dm_policy:gv("echTgDmPolicy")||"all",telegram_allow_from:gv("echTgAllowFrom").trim(),telegram_group_policy:gv("echTgGroupPolicy")||"off",telegram_group_allow_from:gv("echTgGroupAllowFrom").trim(),telegram_require_mention:gb("echTgRequireMention"),enabled:el("echEnabled").checked,version:el("echVer").value.trim()}); note(t("update_ok")); await load();}catch(err){note(err.message,true);}};
 
   el("syncModels").onclick=async()=>{try{await api("/api/models/sync","POST",{}); await load(); note(t("refreshed"));}catch(err){note(err.message,true);}};
   el("fAddCatalogModel").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/models/custom","POST",{provider:el("cmProvider").value.trim()||"Custom",model:el("cmModel").value.trim(),label:el("cmLabel").value.trim()}); e.target.reset(); await load(); note(t("save_ok"));}catch(err){note(err.message,true);}};
@@ -346,10 +479,19 @@
   el("fPwd").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/change-password","POST",{current_password:el("pwCur").value,new_password:el("pwNew").value,confirm_password:el("pwOk").value}); e.target.reset(); note(t("pwd_ok"));}catch(err){note(err.message,true);}};
   el("fHistory").onsubmit=async(e)=>{e.preventDefault(); try{await api("/api/settings/history","POST",{max_history:Number(el("stKeep").value)}); note(t("save_ok")); await load();}catch(err){note(err.message,true);}};
 
+  const bindDynamicHandlers = () => {
+    if(el("fEditCatalogModel")) el("fEditCatalogModel").onsubmit=async(e)=>{e.preventDefault(); if(!S.selModelName) return note(t("require_model"),true); try{await api(`/api/models/${encodeURIComponent(S.selModelName)}`,"PATCH",{provider:gv("emProvider").trim(),model:gv("emModel").trim(),label:gv("emLabel").trim()}); S.selModelName=gv("emModel").trim()||S.selModelName; await load(); note(t("update_ok"));}catch(err){note(err.message,true);}};
+    if(el("fCreateProfile")) el("fCreateProfile").onsubmit=async(e)=>{e.preventDefault(); try{const mv=modelValue("pmModel","pmCustom"); await api("/api/model-profiles","POST",{id:gv("pmId").trim(),name:gv("pmName").trim()||mv.model,provider:gv("pmProvider").trim()||mv.provider,model:mv.model,auth_mode:gv("pmAuthMode")||"shared",auth_profile:gv("pmAuthProfile").trim(),auth_value:gv("pmAuthValue").trim(),base_url:gv("pmBaseUrl").trim(),enabled:gb("pmEnabled"),version:gv("pmVer").trim()}); e.target.reset(); await load(); note(t("create_ok"));}catch(err){note(err.message,true);}};
+    if(el("fEditProfile")) el("fEditProfile").onsubmit=async(e)=>{e.preventDefault(); if(!S.selProfileId) return note(t("select_profile"),true); try{await api(`/api/model-profiles/${encodeURIComponent(S.selProfileId)}`,"PATCH",{name:gv("epName").trim(),provider:gv("epProvider").trim(),model:gv("epModel").trim(),auth_mode:gv("epAuthMode")||"shared",auth_profile:gv("epAuthProfile").trim(),auth_value:gv("epAuthValue").trim(),base_url:gv("epBaseUrl").trim(),enabled:gb("epEnabled"),version:gv("epVer").trim()}); await load(); note(t("update_ok"));}catch(err){note(err.message,true);}};
+    if(el("pmModel")) el("pmModel").onchange=()=>syncCustom("pmModel","pmCustomWrap","pmProvider");
+    if(el("chProvider")) el("chProvider").onchange=()=>toggleTelegram("chProvider","chTelBox");
+    if(el("echProvider")) el("echProvider").onchange=()=>toggleTelegram("echProvider","echTelBox");
+  };
+
   const boot = async () => {
     const ls=localStorage.getItem("ocm_lang");
     S.lang=(ls==="zh"||ls==="en")?ls:(navigator.language.toLowerCase().startsWith("zh")?"zh":"en");
-    try { await load(); if(MUST_CHANGE_PASSWORD){ setPage("security"); note(t("security_warn")); } }
+    try { ensureDynamicPanels(); bindDynamicHandlers(); toggleTelegram("chProvider","chTelBox"); toggleTelegram("echProvider","echTelBox"); await load(); if(MUST_CHANGE_PASSWORD){ setPage("security"); note(t("security_warn")); } }
     catch(err){ note(err.message||t("init_fail"),true); }
   };
 
@@ -358,3 +500,6 @@
 </script>
 </body>
 </html>
+
+
+
