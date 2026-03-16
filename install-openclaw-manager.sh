@@ -8,6 +8,7 @@ VENV_DIR="$INSTALL_DIR/venv"
 PORT=8080
 OPENCLAW_DIR="$HOME/.openclaw"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export DEBIAN_FRONTEND=noninteractive
 
 # 颜色输出
 RED='\033[0;31m'
@@ -46,7 +47,13 @@ fi
 # ==================== 步骤 1: 依赖检查与安装 ====================
 echo -e "${YELLOW}检查并安装系统依赖...${NC}"
 
-apt update -y
+repair_apt_state() {
+    dpkg --configure -a || true
+    apt-get -f install -y || true
+}
+
+repair_apt_state
+apt-get update -y
 
 pick_apt_pkg() {
     for pkg in "$@"; do
@@ -72,19 +79,33 @@ if [ -z "$ATK_BRIDGE_PKG" ]; then
     exit 1
 fi
 
-apt install -y curl git python3 python3-venv python3-pip build-essential libnss3 "$ATK_BRIDGE_PKG" libdrm2 libxkbcommon0 libgbm1 "$ASOUND_PKG" fonts-liberation xdg-utils ${APPINDICATOR_PKG:+$APPINDICATOR_PKG}
+# NodeSource 的 nodejs 与 Ubuntu 的 npm 包冲突，预先移除 npm 规避依赖死锁
+if dpkg -s npm >/dev/null 2>&1; then
+    echo -e "${YELLOW}检测到 apt npm 包，正在移除以避免与 NodeSource nodejs 冲突...${NC}"
+    apt-get remove -y npm || apt-get purge -y npm || true
+fi
+repair_apt_state
+
+apt-get install -y --no-install-recommends \
+    curl git python3 python3-venv python3-pip build-essential libnss3 \
+    "$ATK_BRIDGE_PKG" libdrm2 libxkbcommon0 libgbm1 "$ASOUND_PKG" \
+    fonts-liberation xdg-utils ${APPINDICATOR_PKG:+$APPINDICATOR_PKG}
 
 # 安装最新 Node.js (OpenClaw 需要 >=22)
-if ! command -v node &> /dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]; then
+NODE_MAJOR=0
+if command -v node >/dev/null 2>&1; then
+    NODE_MAJOR="$(node -v | sed -E 's/^v([0-9]+).*/\1/' || echo 0)"
+fi
+if [ "$NODE_MAJOR" -lt 22 ]; then
     echo "安装 Node.js 22 LTS..."
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-    apt install -y nodejs
+    repair_apt_state
+    apt-get install -y nodejs
 fi
 
-if ! command -v npm &> /dev/null; then
-    echo "检测到 npm 缺失，重新安装 Node.js 22..."
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-    apt install -y nodejs
+if ! command -v npm >/dev/null 2>&1; then
+    echo -e "${RED}npm 未安装成功，请先执行: apt-get -f install -y && apt-get install -y nodejs${NC}"
+    exit 1
 fi
 
 # 安装 OpenClaw（如果还没装）
@@ -159,6 +180,7 @@ else
   export OPENCLAW_HEADLESS=1
   export OPENCLAW_HOST=0.0.0.0
 fi
+export OPENCLAW_MANAGER_PORT="\$PORT"
 python main.py
 EOF
 
@@ -167,7 +189,7 @@ chmod +x start.sh
 cat > stop.sh << EOF
 #!/usr/bin/env bash
 INSTALL_DIR="$INSTALL_DIR"
-pkill -f "python .*openclaw-agent-manager/main.py" || true
+pkill -f "\$INSTALL_DIR/main.py" || true
 echo "已停止 openclaw-agent-manager"
 EOF
 
@@ -176,7 +198,8 @@ chmod +x stop.sh
 cat > status.sh << EOF
 #!/usr/bin/env bash
 PORT="$PORT"
-if pgrep -f "python .*openclaw-agent-manager/main.py" > /dev/null; then
+INSTALL_DIR="$INSTALL_DIR"
+if pgrep -f "\$INSTALL_DIR/main.py" > /dev/null; then
     echo -e "${GREEN}运行中 (端口 $PORT)${NC}"
     echo "访问: http://localhost:$PORT"
 else
@@ -197,6 +220,7 @@ User=$RUN_USER
 WorkingDirectory=$INSTALL_DIR
 Environment=OPENCLAW_HEADLESS=$([ "$HAS_GUI" -eq 1 ] && echo 0 || echo 1)
 Environment=OPENCLAW_HOST=0.0.0.0
+Environment=OPENCLAW_MANAGER_PORT=$PORT
 ExecStart=$VENV_DIR/bin/python $INSTALL_DIR/main.py
 Restart=always
 RestartSec=10
