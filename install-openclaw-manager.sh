@@ -39,7 +39,32 @@ fi
 echo -e "${YELLOW}检查并安装系统依赖...${NC}"
 
 $SUDO apt update -y
-$SUDO apt install -y curl git python3 python3-venv python3-pip nodejs npm build-essential libnss3 libatk-bridge2.0-0 libdrm2 libxkbcommon0 libgbm1 libasound2 fonts-liberation libappindicator3-1 xdg-utils
+
+pick_apt_pkg() {
+    for pkg in "$@"; do
+        candidate="$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2; exit}')"
+        if [ -n "${candidate:-}" ] && [ "$candidate" != "(none)" ]; then
+            echo "$pkg"
+            return 0
+        fi
+    done
+    return 1
+}
+
+ASOUND_PKG="$(pick_apt_pkg libasound2t64 libasound2 || true)"
+ATK_BRIDGE_PKG="$(pick_apt_pkg libatk-bridge2.0-0t64 libatk-bridge2.0-0 || true)"
+APPINDICATOR_PKG="$(pick_apt_pkg libappindicator3-1 libayatana-appindicator3-1 || true)"
+
+if [ -z "$ASOUND_PKG" ]; then
+    echo -e "${RED}未找到可用的 ALSA 依赖包（libasound2t64/libasound2）${NC}"
+    exit 1
+fi
+if [ -z "$ATK_BRIDGE_PKG" ]; then
+    echo -e "${RED}未找到可用的 ATK bridge 依赖包${NC}"
+    exit 1
+fi
+
+$SUDO apt install -y curl git python3 python3-venv python3-pip nodejs npm build-essential libnss3 "$ATK_BRIDGE_PKG" libdrm2 libxkbcommon0 libgbm1 "$ASOUND_PKG" fonts-liberation xdg-utils ${APPINDICATOR_PKG:+$APPINDICATOR_PKG}
 
 # 安装最新 Node.js (OpenClaw 需要 >=22)
 if ! command -v node &> /dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]; then
