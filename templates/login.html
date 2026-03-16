@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>登录 | OpenClaw Agent Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #04070f;
+            --panel: rgba(14, 24, 48, 0.78);
+            --line: rgba(120, 178, 255, 0.35);
+            --text: #edf4ff;
+            --muted: #a0b6d8;
+            --accent: #46dfff;
+            --accent-2: #4a7dff;
+            --danger: #ff7c9d;
+            --shadow: 0 26px 50px rgba(0, 0, 0, 0.42);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            color: var(--text);
+            font-family: "Space Grotesk", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 20% 18%, rgba(72, 122, 255, 0.34), transparent 36%),
+                radial-gradient(circle at 82% 14%, rgba(70, 223, 255, 0.2), transparent 32%),
+                radial-gradient(circle at 50% 86%, rgba(63, 255, 200, 0.14), transparent 34%),
+                var(--bg);
+            padding: 20px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(89, 131, 210, 0.09) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(89, 131, 210, 0.09) 1px, transparent 1px);
+            background-size: 42px 42px;
+            z-index: 0;
+        }
+
+        .panel {
+            position: relative;
+            z-index: 1;
+            width: min(470px, 100%);
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .head {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            box-shadow: 0 0 0 4px rgba(78, 157, 255, 0.2);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 0.01em;
+        }
+
+        p {
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        form {
+            display: grid;
+            gap: 12px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #c3d5f3;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid rgba(118, 169, 255, 0.4);
+            border-radius: 10px;
+            background: rgba(6, 17, 38, 0.72);
+            color: var(--text);
+            padding: 10px 12px;
+            outline: none;
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        input:focus {
+            border-color: rgba(70, 223, 255, 0.96);
+            box-shadow: 0 0 0 3px rgba(70, 223, 255, 0.16);
+        }
+
+        button {
+            margin-top: 4px;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-weight: 700;
+            color: #031124;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            cursor: pointer;
+            transition: transform .16s ease, filter .16s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.08);
+        }
+
+        .tips {
+            margin-top: 14px;
+            border: 1px dashed rgba(123, 172, 255, 0.44);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: #b8cced;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: "JetBrains Mono", monospace;
+            color: #ddf2ff;
+        }
+
+        .error {
+            margin-top: 10px;
+            border: 1px solid rgba(255, 124, 157, 0.7);
+            border-radius: 10px;
+            background: rgba(90, 25, 42, 0.42);
+            color: #ffd7e3;
+            font-size: 0.85rem;
+            padding: 8px 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <section class="panel">
+        <div class="head">
+            <div class="dot"></div>
+            <h1>OpenClaw Agent Manager</h1>
+        </div>
+        <p>请先登录后使用控制台功能。</p>
+
+        <form id="loginForm">
+            <div>
+                <label for="username">用户名</label>
+                <input id="username" name="username" autocomplete="username" value="admin" required>
+            </div>
+            <div>
+                <label for="password">密码</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" value="admin" required>
+            </div>
+            <button type="submit">登录系统</button>
+        </form>
+
+        <div class="tips">
+            初始账号：<code>admin</code><br>
+            初始密码：<code>admin</code><br>
+            登录后请在首页“账户安全”中立即修改。
+        </div>
+        <div class="error" id="errorBox"></div>
+    </section>
+
+    <script>
+        const form = document.getElementById("loginForm");
+        const errorBox = document.getElementById("errorBox");
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.style.display = "block";
+        }
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            errorBox.style.display = "none";
+            const payload = Object.fromEntries(new FormData(form).entries());
+            try {
+                const response = await fetch("/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.error || data.detail || "登录失败");
+                }
+                window.location.href = "/";
+            } catch (error) {
+                showError(error.message || "登录失败");
+            }
+        });
+    </script>
+</body>
+</html>

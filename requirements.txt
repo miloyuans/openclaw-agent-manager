@@ -1,0 +1,7 @@
+pywebview
+fastapi
+uvicorn
+playwright
+python-dotenv
+jinja2
+psutil
